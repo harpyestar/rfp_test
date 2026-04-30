@@ -1,7 +1,4 @@
 # Environment variables
-.env.test
-.env.pre
-.env.prod
 
 # Reports
 reports/*

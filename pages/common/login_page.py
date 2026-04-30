@@ -62,7 +62,7 @@ class LoginPage(BasePage):
             await self.click(self.LOGIN_BUTTON)
 
             self.logger.debug("Waiting for login to complete")
-            # 等待 URL 变更到 #/home
+            # 等待 URL 变更到 "**/home*"
             await self.wait_helper.wait_for_url(
                 self.page,
                 "**/home*",

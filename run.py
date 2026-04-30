@@ -5,7 +5,7 @@ PyCharm 测试运行脚本
 == PyCharm 配置方式 ==
   1. 右键 run.py → Modify Run Configuration
   2. Script path 选择 run.py
-  3. Working directory 设置为项目根目录（grfp-ui-test/）
+  3. Working directory 设置为项目根目录（rfp-ui-test/）
   4. Python interpreter 选择 venv 解释器
   5. Parameters 填写以下参数之一：
 

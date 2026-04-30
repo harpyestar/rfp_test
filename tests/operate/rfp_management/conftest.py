@@ -31,7 +31,7 @@ def page_module(browser, event_loop):
     logger.info("Creating module-level page for login state reuse")
 
     async def create_module_page():
-        context = await browser.new_context()
+        context = await browser.new_context(viewport={"width": 1920, "height": 1080})
         page = await context.new_page()
         logger.info("Module-level page created - ready for shared login state")
         return page, context
@@ -121,8 +121,9 @@ def reset_to_home_page(page_module, event_loop):
 
     async def navigate_home():
         # 处理 base_url 末尾的斜杠，避免 URL 重复
-        base_url = config.base_url.rstrip('/')
-        home_url = f"{base_url}/home"
+        HOME_PATH = "/operate.html#/home"
+        home_url = f"{config.base_url.rstrip('/')}{HOME_PATH}"
+
         logger.info(f"Navigating to home page: {home_url}")
         await page_module.goto(home_url, wait_until="networkidle")
         logger.info("Page reset to /home - ready for test execution")

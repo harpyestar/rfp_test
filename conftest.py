@@ -71,7 +71,7 @@ def browser_context(browser, event_loop):
     """
     async def create_context():
         logger.info("Creating new browser context")
-        return await browser.new_context()
+        return await browser.new_context(viewport={"width": 1920, "height": 1080})
 
     context = event_loop.run_until_complete(create_context())
     yield context

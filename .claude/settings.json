@@ -1,0 +1,6 @@
+{
+  "skills": {
+    "paths": [".claude/skills"]
+  },
+  "version": "1"
+}

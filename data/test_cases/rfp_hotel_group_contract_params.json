@@ -1,0 +1,9 @@
+{
+  "hotel_group_discount_price": [
+    {
+      "case_id": "hotel_group_discount_001",
+      "description": "集团折扣报价详情页 - 验证不会出现项目签约时间结束提示",
+      "project_name": "测试1010"
+    }
+  ]
+}

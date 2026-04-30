@@ -1,0 +1,35 @@
+{
+  "create_rfp_project": [
+    {
+      "case_id": "case_001",
+      "description": "标准项目创建",
+      "organization": "hyg测试机构",
+      "project_name_prefix": "hyg-自动化项目",
+      "contact_person": "荷叶",
+      "area_code": "010",
+      "phone": "12345678",
+      "signing_method": "Private RFP",
+      "notification_method": "Manual Notification",
+      "quotation_report": "NO NEED",
+      "start_date": "2026-04-10",
+      "end_date": "2026-05-10",
+      "expected_hotels": 20
+    }
+  ],
+  "rfp_contracting_map": [
+    {
+      "case_id": "map_001",
+      "description": "地图签约页面 - 点击酒店标记验证间夜弹窗",
+      "search_keyword": "hyg-测试项目-新加坡酒店类",
+      "project_name": "hyg-测试项目-新加坡酒店类"
+    }
+  ],
+  "rfp_detail_page": [
+    {
+      "case_id": "detail_001",
+      "description": "报价详情页 - 添加内部跟进备注",
+      "search_keyword": "hyg-测试项目-新加坡酒店类",
+      "project_name": "hyg-测试项目-新加坡酒店类"
+    }
+  ]
+}

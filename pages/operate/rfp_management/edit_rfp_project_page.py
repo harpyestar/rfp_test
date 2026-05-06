@@ -17,41 +17,42 @@ class EditRFPProjectPage(BasePage):
     """编辑 RFP 项目 Page Object"""
 
     # ========== 导航菜单元素 ==========
-    RFP_MANAGEMENT_MENU_NAME = "RFP Management"
-    CONTRACTING_MENU_TEXT = "Contracting"
-    MODIFY_PROJECT_BUTTON_TEXT = "Modify Project"
+    RFP_MANAGEMENT_MENU_TEXT = "签约管理"
+    CONTRACTING_MENU_TEXT = "签约"
+    MODIFY_PROJECT_BUTTON_TEXT = "修改项目"
 
     # ========== Contracting 页面元素 ==========
-    NOT_STARTED_TAB_NAME = "Not Started"
-    STARTED_TAB_NAME = "Started"
-    PROJECT_SEARCH_FILTER_PATTERN = r"^Project$"
-    PROJECT_SEARCH_FILTER_NTH = 1
-    SEARCH_BUTTON_SELECTOR = ".search > .btn"
-    PROJECT_SEARCH_INPUT_PLACEHOLDER = "请输入项目名称"
+    NOT_STARTED_TAB_NAME = "^未启动$"
+    STARTED_TAB_NAME = "^已启动$"
+    PROJECT_SEARCH_LABEL_TEXT = "签约项目"
+    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
 
     # ========== 项目操作按钮 ==========
-    START_BUTTON_TEXT = "Start"
-    YES_CONFIRMATION_BUTTON_TEXT = "Yes"
+    START_BUTTON_TEXT = "启动"
+    CONFIRM_BUTTON_TEXT = "确定"
+    CANCEL_BUTTON_TEXT = "取消"
 
     # ========== 编辑页面 Tab 元素 ==========
-    SAVE_BUTTON_NAME = "Save"
-    PREVIOUS_STEP_BUTTON_NAME = "Previous step"
-    SUCCESS_MESSAGE_SELECTOR = ".el-message__content"
+    SAVE_BUTTON_NAME = "保存"
+    COMPLETE_BUTTON_NAME = "完成"
+    SUCCESS_MESSAGE_SELECTOR = ".c-notify-content-description"
 
     # ========== Tab 列表 ==========
-    # 从需求中的 Playwright 录制代码提取的所有 Tab 名称
+    # 从需求中的 Playwright 录制代码提取的所有 Tab 名称（中文）
     TAB_NAMES = [
-        "Basic Contract Information",
-        "Project Brief",
-        "Company POI",
-        "Invited Hotel",
-        "Custom Procurement Strategy",
-        "Project Procurement Strategy",
-        "Weighted Settings",
-        "Intelligent Recommendation",
-        "Hotel Whitelist",
-        "Lanyon Display Settings",
-        "Historical Transaction Data"
+        "签约基本信息",
+        "项目介绍",
+        "签约项目POI",
+        "邀请酒店",
+        "自定义采购策略",
+        "项目采购策略",
+        "权重设置",
+        "历史交易数据",
+        "智能推荐",
+        "酒店白名单",
+        "Lanyon显示设置",
+        "补充履约监控名单",
+        "酒店违规配置",
     ]
 
     def __init__(self, page: Page):
@@ -60,60 +61,56 @@ class EditRFPProjectPage(BasePage):
 
     # ========== 导航方法 ==========
     async def navigate_to_contracting(self) -> None:
-        """导航至 Contracting 页面"""
-        self.logger.info("开始导航至 Contracting 页面")
+        """导航至 签约管理 > 签约 页面"""
+        self.logger.info("开始导航至签约管理 > 签约页面")
 
-        with allure.step("导航至 Contracting 页面"):
+        with allure.step("导航至签约管理 > 签约页面"):
             try:
-                # Step 1: 点击 RFP Management 菜单
-                self.logger.debug("点击 RFP Management 菜单")
-                rfp_menu = self.page.get_by_role("button", name=self.RFP_MANAGEMENT_MENU_NAME)
+                # Step 1: 点击 签约管理 菜单
+                self.logger.debug(f"点击 {self.RFP_MANAGEMENT_MENU_TEXT} 菜单")
+                rfp_menu = self.page.get_by_text(self.RFP_MANAGEMENT_MENU_TEXT)
                 await rfp_menu.click()
-                self.logger.info("RFP Management 菜单已点击")
+                self.logger.info(f"{self.RFP_MANAGEMENT_MENU_TEXT} 菜单已点击")
 
                 # Step 2: 等待下拉菜单
                 await self.page.wait_for_timeout(300)
 
-                # Step 3: 点击 Contracting 菜单项
+                # Step 3: 点击 签约 菜单项
                 self.logger.debug(f"点击 {self.CONTRACTING_MENU_TEXT} 菜单项")
-                contracting_menu = self.page.get_by_label(self.RFP_MANAGEMENT_MENU_NAME).get_by_text(
-                    self.CONTRACTING_MENU_TEXT
-                )
+                contracting_menu = self.page.get_by_text(self.CONTRACTING_MENU_TEXT, exact=True)
                 await contracting_menu.click()
-                self.logger.info("Contracting 菜单项已点击")
+                self.logger.info(f"{self.CONTRACTING_MENU_TEXT} 菜单项已点击")
 
                 # Step 4: 等待页面加载
                 await self.page.wait_for_load_state("networkidle")
-                allure.attach("Contracting 页面已加载", "导航结果")
-                self.logger.info("[OK] Contracting 页面加载完成")
+                allure.attach("签约页面已加载", "导航结果")
+                self.logger.info("[OK] 签约页面加载完成")
 
             except Exception as e:
-                error_msg = f"导航至 Contracting 页面失败: {str(e)}"
+                error_msg = f"导航至签约页面失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "导航错误")
                 raise
 
     async def click_not_started_tab(self) -> None:
-        """点击 Not Started Tab"""
-        self.logger.info("开始点击 Not Started Tab")
+        """点击 未启动 Tab"""
+        self.logger.info("开始点击 未启动 Tab")
 
         with allure.step(f"选择 {self.NOT_STARTED_TAB_NAME} Tab"):
             try:
-                # 点击 Not Started Tab
+                # 点击 未启动 Tab
                 self.logger.debug(f"定位 {self.NOT_STARTED_TAB_NAME} Tab")
-                not_started_tab = self.page.get_by_role("tab", name=self.NOT_STARTED_TAB_NAME)
+                not_started_tab = self.page.locator("div").filter(
+                    has_text=re.compile(self.NOT_STARTED_TAB_NAME)
+                ).first
+                await not_started_tab.wait_for(timeout=timeout_config.get_element_timeout())
                 await not_started_tab.click()
-                self.logger.info("Not Started Tab 已点击")
-
-                # 等待表格加载
-                await self.page.wait_for_load_state("networkidle")
-                allure.attach(f"已选择: {self.NOT_STARTED_TAB_NAME}", "Tab 选择")
-                self.logger.info("[OK] Not Started Tab 加载完成")
-
+                await self.page.wait_for_timeout(300)
+                self.logger.info("[OK] 未启动 Tab 已点击")
             except Exception as e:
-                error_msg = f"点击 Not Started Tab 失败: {str(e)}"
+                error_msg = f"点击 未启动 Tab 失败: {str(e)}"
                 self.logger.error(error_msg)
-                allure.attach(error_msg, "点击错误")
+                allure.attach(error_msg, "Tab 错误")
                 raise
 
     async def click_started_tab(self) -> None:
@@ -140,48 +137,45 @@ class EditRFPProjectPage(BasePage):
                 raise
 
     async def search_and_open_project(self, project_name: str) -> None:
-        """搜索项目并打开编辑页面"""
+        """搜索签约项目并打开编辑页面"""
         self.logger.info(f"开始搜索项目: {project_name}")
 
         with allure.step(f"搜索项目: {project_name}"):
             try:
-                # Step 1: 点击 Project 搜索框 (使用 locator + filter)
-                self.logger.debug("定位 Project 搜索框")
-                project_filter = self.page.locator("div").filter(
-                    has_text=re.compile(self.PROJECT_SEARCH_FILTER_PATTERN)
-                ).nth(self.PROJECT_SEARCH_FILTER_NTH)
+                # Step 1: 点击 label 聚焦搜索框
+                self.logger.debug(f"定位搜索框 label: {self.PROJECT_SEARCH_LABEL_TEXT}")
+                project_filter = self.page.locator("label").filter(
+                    has_text=self.PROJECT_SEARCH_LABEL_TEXT
+                ).first
+                await project_filter.wait_for(timeout=timeout_config.get_element_timeout())
                 await project_filter.click()
-                self.logger.info("Project 搜索框已点击")
+                self.logger.info("搜索框已聚焦")
 
-                # Step 2: 等待并输入项目名称
-                await self.page.wait_for_timeout(300)
+                # Step 2: 输入项目名称
                 self.logger.debug(f"输入项目名称: {project_name}")
-                # 使用精准定位：外层+内层
-                # 外层：已经通过filter定位到的project_filter (project_filter)
-                # 内层：在该外层内找到 class="el-input__inner" 的 input
-                search_input = project_filter.locator("input.el-input__inner")
-                await search_input.clear()
-                await search_input.fill(project_name)
+                project_input = self.page.get_by_label(self.PROJECT_SEARCH_LABEL_TEXT)
+                await project_input.wait_for(timeout=timeout_config.get_element_timeout())
+                await project_input.fill(project_name)
                 await self.page.wait_for_timeout(200)
                 self.logger.info(f"项目名称已输入: {project_name}")
 
                 # Step 3: 点击搜索按钮
                 self.logger.debug("点击搜索按钮")
-                search_btn = self.page.locator(self.SEARCH_BUTTON_SELECTOR)
-                await search_btn.click()
-                self.logger.info("搜索按钮已点击")
+                search_button = self.page.locator(self.SEARCH_BUTTON_SELECTOR).first
+                await search_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await search_button.click()
 
                 # Step 4: 等待搜索结果加载
                 await self.page.wait_for_load_state("networkidle")
                 allure.attach(f"搜索项目: {project_name}", "搜索操作")
                 self.logger.info("[OK] 项目搜索完成")
 
-                # Step 5: 点击 Modify Project 按钮（首个）
+                # Step 5: 点击 修改项目 按钮（第一个）
                 self.logger.debug(f"定位并点击 {self.MODIFY_PROJECT_BUTTON_TEXT} 按钮（首个）")
                 modify_buttons = self.page.get_by_text(self.MODIFY_PROJECT_BUTTON_TEXT)
-                first_modify_btn = modify_buttons.first
-                await first_modify_btn.click()
-                self.logger.info("Modify Project 按钮已点击")
+                await modify_buttons.first.wait_for(timeout=timeout_config.get_element_timeout())
+                await modify_buttons.first.click()
+                self.logger.info(f"{self.MODIFY_PROJECT_BUTTON_TEXT} 按钮已点击")
 
                 # Step 6: 等待编辑页面加载
                 await self.page.wait_for_load_state("networkidle")
@@ -216,35 +210,35 @@ class EditRFPProjectPage(BasePage):
                 raise
 
     async def has_save_button(self) -> bool:
-        """检查当前 Tab 是否有 Save 按钮"""
-        self.logger.info("检查当前 Tab 是否有 Save 按钮")
+        """检查当前 Tab 是否有保存按钮"""
+        self.logger.info("检查当前 Tab 是否有保存按钮")
 
         try:
-            save_button = self.page.get_by_role("button", name=self.SAVE_BUTTON_NAME)
+            save_button = self.page.get_by_text(self.SAVE_BUTTON_NAME)
             # 等待 100ms 以确保元素加载
             await self.page.wait_for_timeout(100)
             is_visible = await save_button.is_visible()
-            self.logger.debug(f"Save 按钮可见状态: {is_visible}")
+            self.logger.debug(f"保存按钮可见状态: {is_visible}")
             return is_visible
         except Exception as e:
-            self.logger.debug(f"检查 Save 按钮失败: {str(e)}")
+            self.logger.debug(f"检查保存按钮失败: {str(e)}")
             return False
 
     async def click_save_button(self) -> None:
-        """点击 Save 按钮"""
-        self.logger.info("开始点击 Save 按钮")
+        """点击保存按钮"""
+        self.logger.info("开始点击保存按钮")
 
-        with allure.step("点击 Save 按钮"):
+        with allure.step("点击保存按钮"):
             try:
-                save_btn = self.page.get_by_role("button", name=self.SAVE_BUTTON_NAME)
+                save_btn = self.page.get_by_text(self.SAVE_BUTTON_NAME)
                 await save_btn.click()
-                self.logger.info("Save 按钮已点击")
+                self.logger.info("保存按钮已点击")
 
                 # 等待页面响应 - 给服务器充足的响应时间
                 await self.page.wait_for_timeout(3000)
 
             except Exception as e:
-                error_msg = f"点击 Save 按钮失败: {str(e)}"
+                error_msg = f"点击保存按钮失败: {str(e)}"
                 self.logger.error(error_msg)
                 raise
 
@@ -298,54 +292,54 @@ class EditRFPProjectPage(BasePage):
                 allure.attach(error_msg, "验证错误")
                 return False
 
-    async def handle_previous_step(self) -> None:
-        """处理 Previous step 按钮（用于没有 Save 按钮的 Tab）"""
-        self.logger.info("检查是否有 Previous step 按钮")
+    async def handle_complete_or_skip(self) -> None:
+        """处理无保存按钮的 Tab：点击完成按钮或直接跳过"""
+        self.logger.info("检查是否有完成按钮")
 
         try:
-            prev_btn = self.page.get_by_role("button", name=self.PREVIOUS_STEP_BUTTON_NAME)
-            is_visible = await prev_btn.is_visible()
+            complete_btn = self.page.get_by_role("button", name=self.COMPLETE_BUTTON_NAME)
+            is_visible = await complete_btn.is_visible()
 
             if is_visible:
-                self.logger.info("Previous step 按钮可见，点击返回")
-                await prev_btn.click()
-                await self.page.wait_for_timeout(300)
-                self.logger.info("[OK] 已点击 Previous step 按钮")
+                self.logger.info("完成按钮可见，点击跳过")
+                await complete_btn.click()
+                await self.page.wait_for_timeout(500)
+                self.logger.info("[OK] 已点击完成按钮")
             else:
-                self.logger.debug("Previous step 按钮不可见，跳过")
+                self.logger.debug("完成按钮不可见，直接跳过")
 
         except Exception as e:
-            self.logger.debug(f"处理 Previous step 按钮失败: {str(e)}")
+            self.logger.debug(f"处理完成按钮失败: {str(e)}，直接跳过")
 
     # ========== 项目启动相关方法 ==========
     async def search_project_by_keyword(self, project_name: str) -> None:
-        """搜索项目（通用方法，用于 Started/Not Started Tab）"""
+        """搜索签约项目"""
         self.logger.info(f"开始搜索项目: {project_name}")
 
         with allure.step(f"搜索项目: {project_name}"):
             try:
-                # Step 1: 点击 Project 搜索框
-                self.logger.debug("定位 Project 搜索框")
-                project_filter = self.page.locator("div").filter(
-                    has_text=re.compile(self.PROJECT_SEARCH_FILTER_PATTERN)
-                ).nth(self.PROJECT_SEARCH_FILTER_NTH)
+                # Step 1: 点击 label 聚焦搜索框
+                self.logger.debug(f"定位搜索框 label: {self.PROJECT_SEARCH_LABEL_TEXT}")
+                project_filter = self.page.locator("label").filter(
+                    has_text=self.PROJECT_SEARCH_LABEL_TEXT
+                ).first
+                await project_filter.wait_for(timeout=timeout_config.get_element_timeout())
                 await project_filter.click()
-                self.logger.info("Project 搜索框已点击")
+                self.logger.info("搜索框已聚焦")
 
-                # Step 2: 等待并输入项目名称
-                await self.page.wait_for_timeout(300)
+                # Step 2: 输入项目名称
                 self.logger.debug(f"输入项目名称: {project_name}")
-                search_input = project_filter.locator("input.el-input__inner")
-                await search_input.clear()
-                await search_input.fill(project_name)
+                project_input = self.page.get_by_label(self.PROJECT_SEARCH_LABEL_TEXT)
+                await project_input.wait_for(timeout=timeout_config.get_element_timeout())
+                await project_input.fill(project_name)
                 await self.page.wait_for_timeout(200)
                 self.logger.info(f"项目名称已输入: {project_name}")
 
                 # Step 3: 点击搜索按钮
                 self.logger.debug("点击搜索按钮")
-                search_btn = self.page.locator(self.SEARCH_BUTTON_SELECTOR)
-                await search_btn.click()
-                self.logger.info("搜索按钮已点击")
+                search_button = self.page.locator(self.SEARCH_BUTTON_SELECTOR).first
+                await search_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await search_button.click()
 
                 # Step 4: 等待搜索结果加载
                 await self.page.wait_for_load_state("networkidle")
@@ -359,55 +353,68 @@ class EditRFPProjectPage(BasePage):
                 raise
 
     async def click_start_button(self) -> None:
-        """点击第一个 Start 按钮"""
-        self.logger.info("开始点击 Start 按钮")
+        """点击第一个 启动 按钮"""
+        self.logger.info("开始点击 启动 按钮")
 
-        with allure.step("点击 Start 按钮"):
+        with allure.step("点击 启动 按钮"):
             try:
-                # 使用 locator + filter 精确定位 Start 按钮
                 self.logger.debug(f"定位 {self.START_BUTTON_TEXT} 按钮")
-                await self.page.locator("div").filter(
-                    has_text=re.compile(r"^Start$")
-                ).click()
-                self.logger.info("Start 按钮已点击")
+                await self.page.get_by_text(self.START_BUTTON_TEXT, exact=True).click()
+                self.logger.info("启动按钮已点击")
 
                 # 等待弹窗出现
                 await self.page.wait_for_timeout(500)
-                allure.attach("Start 按钮已点击，等待确认弹窗", "操作结果")
-                self.logger.info("Start 按钮点击完成")
+                allure.attach("启动按钮已点击，等待确认弹窗", "操作结果")
+                self.logger.info("启动按钮点击完成")
 
             except Exception as e:
-                error_msg = f"点击 Start 按钮失败: {str(e)}"
+                error_msg = f"点击启动按钮失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "点击错误")
                 raise
 
-    async def verify_start_confirmation_popup_visible(self) -> bool:
-        """验证 Start 确认弹窗（Yes 按钮）是否可见"""
-        self.logger.info("开始验证 Start 确认弹窗")
+    async def verify_confirmation_dialog_visible(self) -> bool:
+        """验证启动确认弹窗（确定按钮）是否可见"""
+        self.logger.info("开始验证启动确认弹窗")
 
-        with allure.step("验证 Yes 确认按钮是否可见"):
+        with allure.step("验证 确定 确认按钮是否可见"):
             try:
-                # 查找 Yes 按钮
-                self.logger.debug(f"定位 {self.YES_CONFIRMATION_BUTTON_TEXT} 按钮")
-                yes_btn = self.page.get_by_text(self.YES_CONFIRMATION_BUTTON_TEXT, exact=True)
+                self.logger.debug(f"定位 {self.CONFIRM_BUTTON_TEXT} 按钮")
+                confirm_btn = self.page.get_by_text(self.CONFIRM_BUTTON_TEXT, exact=True)
 
                 # 等待元素加载
-                await yes_btn.wait_for(timeout=timeout_config.get_element_timeout())
-                self.logger.info("Yes 按钮已定位")
+                await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                self.logger.info("确定按钮已定位")
 
                 # 检查是否可见
-                is_visible = await yes_btn.is_visible()
-                self.logger.info(f"Yes 按钮可见: {is_visible}")
+                is_visible = await confirm_btn.is_visible()
+                self.logger.info(f"确定按钮可见: {is_visible}")
 
-                allure.attach(f"Yes 确认按钮可见: {is_visible}", "弹窗验证结果")
+                allure.attach(f"确定确认按钮可见: {is_visible}", "弹窗验证结果")
                 return is_visible
 
             except Exception as e:
-                error_msg = f"验证 Start 确认弹窗失败: {str(e)}"
+                error_msg = f"验证启动确认弹窗失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "验证错误")
                 return False
+
+    async def click_cancel_button(self) -> None:
+        """点击 取消 按钮关闭确认弹窗"""
+        self.logger.info("开始点击 取消 按钮")
+
+        with allure.step("点击 取消 按钮关闭弹窗"):
+            try:
+                cancel_btn = self.page.get_by_text(self.CANCEL_BUTTON_TEXT, exact=True)
+                await cancel_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await cancel_btn.click()
+                await self.page.wait_for_timeout(300)
+                self.logger.info("[OK] 已点击取消按钮，弹窗已关闭")
+            except Exception as e:
+                error_msg = f"点击取消按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "取消按钮错误")
+                raise
 
     # ========== 完整流程方法 ==========
     async def test_all_tabs_save_functionality(self) -> dict:
@@ -443,16 +450,16 @@ class EditRFPProjectPage(BasePage):
                     # Step 1: 点击 Tab
                     await self.click_tab(tab_name)
 
-                    # Step 2: 检查是否有 Save 按钮
+                    # Step 2: 检查是否有保存按钮
                     has_save = await self.has_save_button()
 
                     if has_save:
                         results["tabs_with_save"] += 1
-                        self.logger.info(f"[OK] {tab_name} 有 Save 按钮，开始点击保存")
+                        self.logger.info(f"[OK] {tab_name} 有保存按钮，开始点击保存")
 
-                        with allure.step(f"Tab: {tab_name} - 点击 Save 并验证成功"):
+                        with allure.step(f"Tab: {tab_name} - 点击保存并验证成功"):
                             try:
-                                # 点击 Save
+                                # 点击保存
                                 await self.click_save_button()
 
                                 # 验证成功提示
@@ -489,20 +496,20 @@ class EditRFPProjectPage(BasePage):
 
                     else:
                         results["tabs_without_save"] += 1
-                        self.logger.info(f"[INFO] {tab_name} 无 Save 按钮，处理 Previous step")
+                        self.logger.info(f"[INFO] {tab_name} 无保存按钮，点击完成跳过")
 
-                        with allure.step(f"Tab: {tab_name} - 无 Save 按钮，处理 Previous step"):
+                        with allure.step(f"Tab: {tab_name} - 无保存按钮，点击完成跳过"):
                             try:
-                                # 处理 Previous step
-                                await self.handle_previous_step()
+                                # 点击完成或跳过
+                                await self.handle_complete_or_skip()
 
                                 results["details"].append({
                                     "tab_name": tab_name,
                                     "has_save": False,
                                     "save_result": "NO_SAVE_BUTTON",
-                                    "message": "无 Save 按钮，正常跳过"
+                                    "message": "无保存按钮，正常跳过"
                                 })
-                                self.logger.info(f"[OK] {tab_name} 正常处理（无 Save 按钮）")
+                                self.logger.info(f"[OK] {tab_name} 正常处理（无保存按钮）")
 
                             except Exception as e:
                                 results["details"].append({
@@ -529,11 +536,11 @@ class EditRFPProjectPage(BasePage):
             summary = f"""
             测试汇总:
             - 总 Tab 数: {results['total_tabs']}
-            - 有 Save 按钮的 Tab: {results['tabs_with_save']}
-            - 无 Save 按钮的 Tab: {results['tabs_without_save']}
+            - 有保存按钮的 Tab: {results['tabs_with_save']}
+            - 无保存按钮的 Tab: {results['tabs_without_save']}
             - 保存成功: {results['save_success_count']}
             - 保存失败: {results['save_failure_count']}
-            
+
             详细结果:
             """
             for detail in results["details"]:

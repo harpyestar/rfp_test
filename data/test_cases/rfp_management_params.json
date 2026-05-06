@@ -3,17 +3,15 @@
     {
       "case_id": "case_001",
       "description": "标准项目创建",
-      "organization": "hyg测试机构",
+      "agency_name": "测试机构hy",
       "project_name_prefix": "hyg-自动化项目",
       "contact_person": "荷叶",
-      "area_code": "010",
-      "phone": "12345678",
-      "signing_method": "Private RFP",
-      "notification_method": "Manual Notification",
-      "quotation_report": "NO NEED",
-      "start_date": "2026-04-10",
-      "end_date": "2026-05-10",
-      "expected_hotels": 20
+      "contact_phone": "17755389215",
+      "start_day": 1,
+      "end_day": 28,
+      "expected_hotel_count": "100",
+      "min_diff_std": "100",
+      "max_diff_std": "500"
     }
   ],
   "rfp_contracting_map": [

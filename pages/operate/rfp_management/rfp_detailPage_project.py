@@ -34,6 +34,9 @@ class RFPDetailPageProject(BasePage):
     INTERNAL_REMARK_INPUT_PLACEHOLDER = "请输入内部跟进备注"
     CONFIRM_BUTTON_TEXT = "确定"
 
+    EXPAND_BUTTON_TEXT = "展开 ▼"
+    COLLAPSE_BUTTON_TEXT = "收起 ▲"
+
     def __init__(self, page: Page):
         super().__init__(page)
         self.logger = get_logger(self.__class__.__name__, config.log_level)
@@ -276,6 +279,80 @@ class RFPDetailPageProject(BasePage):
                 error_msg = f"填写内部备注失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "备注错误")
+                raise
+
+    async def verify_expand_button_visible(self) -> bool:
+        """验证备注展开按钮是否可见"""
+        self.logger.info("开始验证备注展开按钮是否可见")
+
+        try:
+            expand_button = self.page.get_by_text(
+                self.EXPAND_BUTTON_TEXT,
+                exact=True,
+            ).first
+            await expand_button.wait_for(timeout=timeout_config.get_element_timeout())
+            is_visible = await expand_button.is_visible()
+            self.logger.info(f"备注展开按钮可见: {is_visible}")
+            return is_visible
+        except Exception as e:
+            self.logger.error(f"验证备注展开按钮失败: {str(e)}")
+            return False
+
+    async def click_expand_button(self) -> None:
+        """点击备注展开按钮"""
+        self.logger.info("开始点击备注展开按钮")
+
+        with allure.step("点击备注展开按钮"):
+            try:
+                expand_button = self.page.get_by_text(
+                    self.EXPAND_BUTTON_TEXT,
+                    exact=True,
+                ).first
+                await expand_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await expand_button.click()
+                await self.page.wait_for_timeout(300)
+                self.logger.info("[OK] 已点击备注展开按钮")
+            except Exception as e:
+                error_msg = f"点击备注展开按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "展开按钮错误")
+                raise
+
+    async def verify_collapse_button_visible(self) -> bool:
+        """验证备注收起按钮是否可见"""
+        self.logger.info("开始验证备注收起按钮是否可见")
+
+        try:
+            collapse_button = self.page.get_by_text(
+                self.COLLAPSE_BUTTON_TEXT,
+                exact=True,
+            ).first
+            await collapse_button.wait_for(timeout=timeout_config.get_element_timeout())
+            is_visible = await collapse_button.is_visible()
+            self.logger.info(f"备注收起按钮可见: {is_visible}")
+            return is_visible
+        except Exception as e:
+            self.logger.error(f"验证备注收起按钮失败: {str(e)}")
+            return False
+
+    async def click_collapse_button(self) -> None:
+        """点击备注收起按钮"""
+        self.logger.info("开始点击备注收起按钮")
+
+        with allure.step("点击备注收起按钮"):
+            try:
+                collapse_button = self.page.get_by_text(
+                    self.COLLAPSE_BUTTON_TEXT,
+                    exact=True,
+                ).first
+                await collapse_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await collapse_button.click()
+                await self.page.wait_for_timeout(300)
+                self.logger.info("[OK] 已点击备注收起按钮")
+            except Exception as e:
+                error_msg = f"点击备注收起按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "收起按钮错误")
                 raise
 
     async def refresh_detail_page(self) -> None:

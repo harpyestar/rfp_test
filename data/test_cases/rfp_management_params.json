@@ -26,8 +26,14 @@
     {
       "case_id": "detail_001",
       "description": "报价详情页 - 添加内部跟进备注",
-      "search_keyword": "hy测试项目-智能推荐1",
-      "project_name": "hy测试项目-智能推荐1"
+      "search_keyword": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动",
+      "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动"
+    },
+    {
+      "case_id": "detail_002",
+      "description": "报价详情页 - 验证内部跟进备注展开/收起功能",
+      "search_keyword": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动",
+      "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动"
     }
   ],
   "rfp_contract_price_status": [

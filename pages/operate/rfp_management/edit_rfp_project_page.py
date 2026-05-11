@@ -4,13 +4,13 @@
 所有超时值从 timeout_config 中读取，所有选择器统一在类变量中定义
 """
 
-from playwright.async_api import Page
+import re
+import allure
+from playwright.async_api import Page, Download
 from pages.common.base_page import BasePage
 from utils.config import config
 from utils.timeout_config import timeout_config
 from utils.logger import get_logger
-import allure
-import re
 
 
 class EditRFPProjectPage(BasePage):
@@ -31,6 +31,17 @@ class EditRFPProjectPage(BasePage):
     START_BUTTON_TEXT = "启动"
     CONFIRM_BUTTON_TEXT = "确定"
     CANCEL_BUTTON_TEXT = "取消"
+
+    # ========== 项目操作 - 修改按钮 ==========
+    MODIFY_BUTTON_TEXT = "修改"
+
+    # ========== 邀请酒店 Tab 元素 ==========
+    INVITE_HOTEL_TAB_NAME = "邀请酒店"
+    EXPORT_BUTTON_TEXT = "^导出$"
+    ADD_GROUP_INTENT_HOTEL_TEXT = "添加酒店集团意向单店"
+
+    # ========== URL 项目 ID 提取 ==========
+    PROJECT_ID_PATTERN = re.compile(r'projectId=(\d+)')
 
     # ========== 编辑页面 Tab 元素 ==========
     SAVE_BUTTON_NAME = "保存"
@@ -114,26 +125,22 @@ class EditRFPProjectPage(BasePage):
                 raise
 
     async def click_started_tab(self) -> None:
-        """点击 Started Tab"""
-        self.logger.info("开始点击 Started Tab")
+        """点击已启动 Tab"""
+        self.logger.info("开始点击已启动 Tab")
 
         with allure.step(f"选择 {self.STARTED_TAB_NAME} Tab"):
             try:
-                # 点击 Started Tab
-                self.logger.debug(f"定位 {self.STARTED_TAB_NAME} Tab")
-                started_tab = self.page.get_by_role("tab", name=self.STARTED_TAB_NAME, exact=True)
+                started_tab = self.page.locator("div").filter(
+                    has_text=re.compile(self.STARTED_TAB_NAME)
+                ).first
+                await started_tab.wait_for(timeout=timeout_config.get_element_timeout())
                 await started_tab.click()
-                self.logger.info("Started Tab 已点击")
-
-                # 等待表格加载
-                await self.page.wait_for_load_state("networkidle")
-                allure.attach(f"已选择: {self.STARTED_TAB_NAME}", "Tab 选择")
-                self.logger.info("[OK] Started Tab 加载完成")
-
+                await self.page.wait_for_timeout(300)
+                self.logger.info("[OK] 已点击已启动 Tab")
             except Exception as e:
-                error_msg = f"点击 Started Tab 失败: {str(e)}"
+                error_msg = f"点击已启动 Tab 失败: {str(e)}"
                 self.logger.error(error_msg)
-                allure.attach(error_msg, "点击错误")
+                allure.attach(error_msg, "Tab 错误")
                 raise
 
     async def search_and_open_project(self, project_name: str) -> None:
@@ -414,6 +421,169 @@ class EditRFPProjectPage(BasePage):
                 error_msg = f"点击取消按钮失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "取消按钮错误")
+                raise
+
+    # ========== 酒店导出相关方法 ==========
+    async def search_and_click_modify(self, project_name: str) -> None:
+        """
+        在已启动 Tab 中搜索项目并点击 修改 按钮进入编辑页
+
+        Args:
+            project_name: 项目名称
+        """
+        self.logger.info(f"开始搜索项目并点击修改: {project_name}")
+
+        with allure.step(f"搜索项目并点击修改: {project_name}"):
+            try:
+                # Step 1: 点击 label 聚焦搜索框
+                self.logger.debug(f"定位搜索框 label: {self.PROJECT_SEARCH_LABEL_TEXT}")
+                project_filter = self.page.locator("label").filter(
+                    has_text=self.PROJECT_SEARCH_LABEL_TEXT
+                ).first
+                await project_filter.wait_for(timeout=timeout_config.get_element_timeout())
+                await project_filter.click()
+                self.logger.info("搜索框已聚焦")
+
+                # Step 2: 输入项目名称
+                self.logger.debug(f"输入项目名称: {project_name}")
+                project_input = self.page.get_by_label(self.PROJECT_SEARCH_LABEL_TEXT)
+                await project_input.wait_for(timeout=timeout_config.get_element_timeout())
+                await project_input.fill(project_name)
+                await self.page.wait_for_timeout(200)
+                self.logger.info(f"项目名称已输入: {project_name}")
+
+                # Step 3: 点击搜索按钮
+                self.logger.debug("点击搜索按钮")
+                search_button = self.page.locator(self.SEARCH_BUTTON_SELECTOR).first
+                await search_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await search_button.click()
+
+                # Step 4: 等待搜索结果加载
+                await self.page.wait_for_load_state("networkidle")
+                allure.attach(f"搜索项目: {project_name}", "搜索操作")
+                self.logger.info("[OK] 项目搜索完成")
+
+                # Step 5: 点击 修改 按钮（可能存在多个，取首个匹配项）
+                # 注释说明：在已启动 Tab 中，"修改" 按钮位于表格操作栏
+                self.logger.debug(f"定位并点击 {self.MODIFY_BUTTON_TEXT} 按钮")
+                modify_button = self.page.get_by_text(self.MODIFY_BUTTON_TEXT, exact=True).first
+                await modify_button.wait_for(timeout=timeout_config.get_element_timeout())
+                await modify_button.click()
+                self.logger.info(f"{self.MODIFY_BUTTON_TEXT} 按钮已点击")
+
+                # Step 6: 等待编辑页面加载
+                await self.page.wait_for_load_state("networkidle")
+                allure.attach("已进入项目编辑页面", "进入编辑页")
+                self.logger.info("[OK] 项目编辑页面加载完成")
+
+            except Exception as e:
+                error_msg = f"搜索项目或点击修改失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "搜索/修改错误")
+                raise
+
+    async def get_project_id_from_url(self) -> str:
+        """
+        从编辑页面 URL 中提取项目 ID
+
+        Returns:
+            str: 项目 ID
+        """
+        url = self.page.url
+        self.logger.info(f"当前编辑页 URL: {url}")
+
+        match = self.PROJECT_ID_PATTERN.search(url)
+        if match:
+            project_id = match.group(1)
+            self.logger.info(f"提取到项目 ID: {project_id}")
+            allure.attach(f"项目 ID: {project_id}", "项目 ID")
+            return project_id
+        else:
+            error_msg = f"无法从 URL 中提取项目 ID: {url}"
+            self.logger.error(error_msg)
+            allure.attach(error_msg, "URL 解析错误")
+            raise ValueError(error_msg)
+
+    async def export_normal_hotel_list(self) -> Download:
+        """
+        在 邀请酒店 Tab 中点击 导出 按钮（普通酒店名单）
+
+        Returns:
+            Download: Playwright Download 对象
+        """
+        self.logger.info("开始导出普通酒店名单")
+
+        with allure.step("导出普通酒店名单"):
+            try:
+                async with self.page.expect_download() as download_info:
+                    export_btn = self.page.locator("div").filter(
+                        has_text=re.compile(self.EXPORT_BUTTON_TEXT)
+                    ).nth(1)
+                    await export_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                    await export_btn.click()
+
+                download = await download_info.value
+                self.logger.info(f"普通酒店名单导出完成: {download.suggested_filename}")
+                allure.attach(f"导出文件名: {download.suggested_filename}", "导出文件")
+                return download
+
+            except Exception as e:
+                error_msg = f"导出普通酒店名单失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "导出错误")
+                raise
+
+    async def click_add_group_intent_hotel_button(self) -> None:
+        """点击 添加酒店集团意向单店 按钮"""
+        self.logger.info("开始点击添加酒店集团意向单店按钮")
+
+        with allure.step("点击添加酒店集团意向单店"):
+            try:
+                add_btn = self.page.get_by_text(self.ADD_GROUP_INTENT_HOTEL_TEXT)
+                await add_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await add_btn.click()
+                await self.page.wait_for_timeout(500)
+                self.logger.info("[OK] 已点击添加酒店集团意向单店按钮")
+            except Exception as e:
+                error_msg = f"点击添加酒店集团意向单店按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "点击错误")
+                raise
+
+    async def export_group_hotel_list(self) -> Download:
+        """
+        点击 添加酒店集团意向单店 后，在展开的区域中点击 导出 按钮（集团酒店名单）
+
+        注意：与普通导出同为 nth(1)，因为 DOM 中始终有两个「导出」按钮：
+              nth(0) = 集团区域（初始可能隐藏），nth(1) = 普通区域。
+              点击「添加酒店集团意向单店」后集团区域展开，nth(1) 对应集团导出。
+
+        Returns:
+            Download: Playwright Download 对象
+        """
+        self.logger.info("开始导出集团酒店名单")
+
+        with allure.step("导出集团酒店名单"):
+            try:
+                # 等待集团区域加载
+                await self.page.wait_for_timeout(1000)
+
+                async with self.page.expect_download() as download_info:
+                    export_btn = self.page.locator("div").filter(
+                        has_text=re.compile(self.EXPORT_BUTTON_TEXT)
+                    ).nth(1)
+                    await export_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                    await export_btn.click()
+
+                download = await download_info.value
+                self.logger.info(f"集团酒店名单导出完成: {download.suggested_filename}")
+                allure.attach(f"导出文件名: {download.suggested_filename}", "导出文件")
+                return download
+
+            except Exception as e:
+                error_msg = f"导出集团酒店名单失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "导出错误")
                 raise
 
     # ========== 完整流程方法 ==========

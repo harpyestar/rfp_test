@@ -36,6 +36,20 @@
       "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动"
     }
   ],
+  "export_hotel_list": [
+    {
+      "case_id": "export_normal",
+      "description": "普通酒店名单-验证酒店ID字段",
+      "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动",
+      "export_type": "normal"
+    },
+    {
+      "case_id": "export_group",
+      "description": "集团酒店名单-验证酒店ID字段",
+      "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动",
+      "export_type": "group"
+    }
+  ],
   "rfp_contract_price_status": [
     {
       "case_id": "price_000",

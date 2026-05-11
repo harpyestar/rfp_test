@@ -25,6 +25,11 @@ class TimeoutConfig:
         """获取导航超时（毫秒）"""
         return config.timeout_navigation
 
+    @staticmethod
+    def get_quick_step_timeout() -> int:
+        """获取快速步骤等待超时（毫秒），用于 SPA 跳转等短暂等待"""
+        return config.timeout_quick_step
+
 
 # 创建全局超时配置实例
 timeout_config = TimeoutConfig()

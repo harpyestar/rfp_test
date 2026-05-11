@@ -26,7 +26,7 @@ ignore-superpowers: true
 | HotelGroup（酒店集团端） | 酒店集团端角色，旗下可关联多个品牌，以及品牌酒店，或单独关联某个酒店，可参与项目竞标，以及对旗下关联酒店的竞标价格审核 |
 
 
-### 1.2 核心业务流程
+### 核心业务流程
 
 ```
 运营端 创建项目 → 填写多个Tab信息 → 启动项目（state: 0→1）
@@ -38,13 +38,43 @@ ignore-superpowers: true
 项目归档完成（state: →2）
 ```
 
+### 角色菜单权限
+
+登录后，系统首页为 `/home`，不同角色可见的菜单模块不同。
+
+| 菜单模块             | Operate | Hotel | HotelGroup |
+|------------------|---------|-------|------------|
+| 工作台              | ✅ | ✅ | ✅ |
+| 签约管理             | ✅ | ✅ | ✅ |
+| 发布新项目            | ✅ | ❌ | ❌ |
+| AI导入             | ✅ | ❌ | ❌ |
+| 酒店竞价管理           | ✅ | ❌ | ❌ |
+| 机构管理             | ✅ | ✅ | ✅ |
+| 用户管理             | ✅ | ✅ | ✅ |
+| POI管理            | ✅ | ❌ | ❌ |
+| 集团大客户管理          | ✅ | ❌ | ✅ |
+
+### 页面交互特征
+
+- **前端框架**：Vue.js（动态渲染）
+- **UI 组件库**：Element UI (El-* 组件)
+- **主要组件**：侧边栏导航、下拉菜单、抽屉面板、模态对话框、表格/列表、表单
+
 
 ### 实现UI测试技术栈
 python+Playwright（pytest-playwright）+allure
 
 ---
 
+## 🔧 超时配置管理规则
 
+**核心原则：禁止硬编码超时值，所有超时配置统一管理**
+
+- 超时配置定义在 `.env.test`：`TIMEOUT_PAGE_LOAD`、`TIMEOUT_ELEMENT`、`TIMEOUT_NAVIGATION`、`TIMEOUT_QUICK_STEP`
+- 通过 `utils/timeout_config.py` 统一读取，仅此一处与 `.env` 交互
+- 代码中使用：`from utils.timeout_config import timeout_config; timeout_config.get_element_timeout()`
+- 不要在每个文件中重复读取 `.env`，不要在代码中硬编码任何超时数值（如 `timeout=10000`）
+- 新建 Page Object 或工具类时，直接从 `timeout_config` 获取超时值，不创建新常量
 
 ## 元素定位规则
 

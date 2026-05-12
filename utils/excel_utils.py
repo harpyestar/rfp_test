@@ -148,11 +148,21 @@ async def verify_exported_hotel_excel(download, db_data: list, sheet_name: str) 
         f"Excel 行数: {len(excel_rows)}, 数据库行数: {len(db_data)}"
     )
 
-    # ===== 断言 3: 逐行对比数据 =====
+    # ===== 断言 3: 以 hotel_id 为 key 逐条匹配（无视顺序） =====
+    db_dict = {row["hotel_id"]: row for row in db_data}
     mismatches = []
-    for i, (excel_row, db_row) in enumerate(zip(excel_rows, db_data)):
+    matched_db_ids = set()
+
+    for i, excel_row in enumerate(excel_rows):
         excel_id = excel_row[hotel_id_col].replace(".0", "")
-        db_id = db_row["hotel_id"].replace(".0", "")
+        db_row = db_dict.get(excel_id)
+
+        if db_row is None:
+            mismatches.append(f"行 {i + 2}: Excel(ID={excel_id}) 在数据库中未找到")
+            continue
+
+        matched_db_ids.add(excel_id)
+        db_id = db_row["hotel_id"]
 
         if excel_id != db_id:
             mismatches.append(f"行 {i + 2}: Excel(ID={excel_id}) ≠ DB(ID={db_id})")
@@ -164,6 +174,13 @@ async def verify_exported_hotel_excel(download, db_data: list, sheet_name: str) 
                 mismatches.append(
                     f"行 {i + 2}: Excel(名称={excel_name}) ≠ DB(名称={db_name})"
                 )
+
+    # ===== 断言 4: DB 数据在 Excel 中都有体现 =====
+    missing_in_excel = set(db_dict.keys()) - matched_db_ids
+    if missing_in_excel:
+        mismatches.append(
+            f"数据库中存在但 Excel 中缺失的酒店 ID ({len(missing_in_excel)} 个): {', '.join(sorted(missing_in_excel))}"
+        )
 
     assert len(mismatches) == 0, (
         f"[{sheet_name}] 数据不匹配！共 {len(mismatches)} 处:\n" + "\n".join(mismatches)

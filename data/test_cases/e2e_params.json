@@ -1,0 +1,13 @@
+{
+  "cross_end_price_status": [
+    {
+      "case_id": "e2e_price_001",
+      "description": "平台端置酒店议价中→酒店端提交报价→平台端中签",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "hotel_name": "维也纳国际酒店(深圳大学城体育中心店)",
+      "import_status": "议价中",
+      "message": "价格状态流转：议价中→修订报价→已中签"
+    }
+  ]
+}

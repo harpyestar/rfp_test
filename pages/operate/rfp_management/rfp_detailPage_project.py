@@ -37,6 +37,13 @@ class RFPDetailPageProject(BasePage):
     EXPAND_BUTTON_TEXT = "展开 ▼"
     COLLAPSE_BUTTON_TEXT = "收起 ▲"
 
+    # ========== 价格状态变更操作 ==========
+    CONTINUE_NEGOTIATION_BUTTON_TEXT = "继续议价"
+    SIGNED_BUTTON_TEXT = "确认中签"
+    REJECTED_BUTTON_TEXT = "否决报价"
+    MESSAGE_BOARD_SELECTOR = "//div[@class='w-100p c-asm']//textarea"
+    CONFIRM_ACTION_BUTTON_SELECTOR = "div.c-asm.c-button.bg-white.flex-center.size-sm.color-primary.r-sm"
+
     def __init__(self, page: Page):
         super().__init__(page)
         self.logger = get_logger(self.__class__.__name__, config.log_level)
@@ -353,6 +360,80 @@ class RFPDetailPageProject(BasePage):
                 error_msg = f"点击备注收起按钮失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "收起按钮错误")
+                raise
+
+    # ======================================================================
+    # 价格状态变更操作
+    # ======================================================================
+
+    async def _click_action_text_button(self, button_text: str) -> None:
+        """点击指定文本的操作按钮（继续议价/中签/否决）"""
+        self.logger.info(f"点击操作按钮: {button_text}")
+
+        with allure.step(f"点击操作按钮: {button_text}"):
+            try:
+                action_btn = self.page.get_by_text(button_text, exact=True).first
+                await action_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await action_btn.click()
+                await self.page.wait_for_timeout(300)
+                self.logger.info(f"[OK] 已点击操作按钮: {button_text}")
+            except Exception as e:
+                error_msg = f"点击操作按钮 [{button_text}] 失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "操作按钮错误")
+                raise
+
+    async def click_action_by_type(self, action: str) -> None:
+        """根据动作类型点击对应的操作按钮
+
+        Args:
+            action: 操作类型，"继续议价" / "中签" / "否决"
+        """
+        action_text_map = {
+            "继续议价": self.CONTINUE_NEGOTIATION_BUTTON_TEXT,
+            "中签": self.SIGNED_BUTTON_TEXT,
+            "否决": self.REJECTED_BUTTON_TEXT,
+        }
+        btn_text = action_text_map.get(action)
+        if btn_text is None:
+            raise ValueError(f"不支持的操作类型: {action}")
+        await self._click_action_text_button(btn_text)
+
+    async def fill_action_message(self, message: str) -> None:
+        """在留言板输入内容"""
+        self.logger.info(f"输入留言: {message}")
+
+        with allure.step(f"输入留言: {message}"):
+            try:
+                msg_input = self.page.locator(self.MESSAGE_BOARD_SELECTOR)
+                await msg_input.wait_for(timeout=timeout_config.get_element_timeout())
+                await msg_input.click()
+                await msg_input.fill(message)
+                await self.page.wait_for_timeout(200)
+                self.logger.info("[OK] 留言已输入")
+            except Exception as e:
+                error_msg = f"输入留言失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "留言输入错误")
+                raise
+
+    async def click_action_confirm(self) -> None:
+        """点击操作确认对话框中的确定按钮"""
+        self.logger.info("点击确定按钮")
+
+        with allure.step("点击确定按钮"):
+            try:
+                confirm_btn = self.page.locator(
+                    self.CONFIRM_ACTION_BUTTON_SELECTOR
+                )
+                await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await confirm_btn.click()
+                await self.page.wait_for_timeout(500)
+                self.logger.info("[OK] 已点击确定按钮")
+            except Exception as e:
+                error_msg = f"点击确定按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "确定按钮错误")
                 raise
 
     async def refresh_detail_page(self) -> None:

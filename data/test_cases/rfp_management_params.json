@@ -36,6 +36,134 @@
       "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动"
     }
   ],
+  "rfp_detail_page_price_status": [
+    {
+      "case_id": "detail_price_000",
+      "description": "报价详情页-去签约跳转验证",
+      "project_name": "自动化测试项目-价格变换"
+    },
+    {
+      "case_id": "detail_price_001",
+      "description": "报价详情页-新标→议价中",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "新标",
+      "initial_price_tab": "新标",
+      "action": "继续议价",
+      "target_price_tab": "议价中",
+      "message": "修改价格状态：新标→议价中"
+    },
+    {
+      "case_id": "detail_price_002",
+      "description": "报价详情页-新标→已中签",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "新标",
+      "initial_price_tab": "新标",
+      "action": "中签",
+      "target_price_tab": "已中签",
+      "message": "修改价格状态：新标→已中签"
+    },
+    {
+      "case_id": "detail_price_003",
+      "description": "报价详情页-新标→已拒绝",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "新标",
+      "initial_price_tab": "新标",
+      "action": "否决",
+      "target_price_tab": "已拒绝",
+      "message": "修改价格状态：新标→已拒绝"
+    },
+    {
+      "case_id": "detail_price_004",
+      "description": "报价详情页-议价中→已中签",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "议价中",
+      "initial_price_tab": "议价中",
+      "action": "中签",
+      "target_price_tab": "已中签",
+      "message": "修改价格状态：议价中→已中签"
+    },
+    {
+      "case_id": "detail_price_005",
+      "description": "报价详情页-议价中→已拒绝",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "议价中",
+      "initial_price_tab": "议价中",
+      "action": "否决",
+      "target_price_tab": "已拒绝",
+      "message": "修改价格状态：议价中→已拒绝"
+    },
+    {
+      "case_id": "detail_price_006",
+      "description": "报价详情页-修订报价→议价中",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "修订报价",
+      "initial_price_tab": "修订报价",
+      "action": "继续议价",
+      "target_price_tab": "议价中",
+      "message": "修改价格状态：修订报价→议价中"
+    },
+    {
+      "case_id": "detail_price_007",
+      "description": "报价详情页-修订报价→已中签",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "修订报价",
+      "initial_price_tab": "修订报价",
+      "action": "中签",
+      "target_price_tab": "已中签",
+      "message": "修改价格状态：修订报价→已中签"
+    },
+    {
+      "case_id": "detail_price_008",
+      "description": "报价详情页-修订报价→已拒绝",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "修订报价",
+      "initial_price_tab": "修订报价",
+      "action": "否决",
+      "target_price_tab": "已拒绝",
+      "message": "修改价格状态：修订报价→已拒绝"
+    },
+    {
+      "case_id": "detail_price_009",
+      "description": "报价详情页-保持原价→议价中",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "保持原价",
+      "initial_price_tab": "保持原价",
+      "action": "继续议价",
+      "target_price_tab": "议价中",
+      "message": "修改价格状态：保持原价→议价中"
+    },
+    {
+      "case_id": "detail_price_010",
+      "description": "报价详情页-保持原价→已中签",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "保持原价",
+      "initial_price_tab": "保持原价",
+      "action": "中签",
+      "target_price_tab": "已中签",
+      "message": "修改价格状态：保持原价→已中签"
+    },
+    {
+      "case_id": "detail_price_011",
+      "description": "报价详情页-保持原价→已拒绝",
+      "project_name": "自动化测试项目-价格变换",
+      "hotel_id": "461221",
+      "import_status": "保持原价",
+      "initial_price_tab": "保持原价",
+      "action": "否决",
+      "target_price_tab": "已拒绝",
+      "message": "修改价格状态：保持原价→已拒绝"
+    }
+  ],
   "export_hotel_list": [
     {
       "case_id": "export_normal",

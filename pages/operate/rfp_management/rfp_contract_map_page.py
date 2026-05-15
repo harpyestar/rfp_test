@@ -432,6 +432,39 @@ class RFPContractMapPage(BasePage):
                 raise
 
     # ======================================================================
+    # 查看报价详情
+    # ======================================================================
+
+    VIEW_BID_DETAIL_BUTTON_TEXT = "查看报价详情"
+
+    async def click_first_view_bid_detail(self) -> Page:
+        """点击当前价格状态下的首个酒店的查看报价详情按钮，返回新打开的详情页"""
+        self.logger.info("开始点击查看报价详情按钮")
+
+        with allure.step("点击查看报价详情按钮"):
+            try:
+                view_bid_btn = self.page.get_by_text(
+                    self.VIEW_BID_DETAIL_BUTTON_TEXT,
+                    exact=True,
+                ).first
+                await view_bid_btn.wait_for(
+                    timeout=timeout_config.get_element_timeout()
+                )
+
+                async with self.page.expect_popup() as popup_info:
+                    await view_bid_btn.click()
+
+                detail_page = await popup_info.value
+                await detail_page.wait_for_load_state("domcontentloaded")
+                self.logger.info("[OK] 报价详情页已打开")
+                return detail_page
+            except Exception as e:
+                error_msg = f"打开报价详情页失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "报价详情页错误")
+                raise
+
+    # ======================================================================
     # 确定按钮
     # ======================================================================
 

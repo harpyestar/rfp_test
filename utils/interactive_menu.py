@@ -157,9 +157,9 @@ def build_pytest_cmd(selection, env_config):
     cmd = [sys.executable, "-m", "pytest"]
 
     if mode == "all":
-        cmd += ["tests/", "-n", "auto"]
+        cmd += ["tests/", "-n", str(selection["threads"])]
     elif mode == "marker":
-        cmd += ["tests/", "-m", selection["marker"], "-n", "auto"]
+        cmd += ["tests/", "-m", selection["marker"], "-n", str(selection["threads"])]
     else:  # role / module / file / case
         path = selection.get("path")
         if not path:
@@ -266,9 +266,16 @@ def select_allure():
     return idx == 0  # True = 启用
 
 
+def select_thread_count():
+    """选择线程数（1-9），用于全部用例执行和按标记执行"""
+    opts = [str(i) for i in range(1, 10)]
+    idx = prompt_choice(opts, "请选择并发线程数:", default=4)
+    return idx + 1  # 返回 1-9
+
+
 def select_exec_mode():
     """选择执行方式（第二层）"""
-    modes = ["全部用例执行（自动多线程）", "按标记执行", "指定用例执行"]
+    modes = ["全部用例执行", "按标记执行", "指定用例执行"]
     idx = prompt_choice(modes, "请选择执行方式:")
     return ["all", "marker", "specific"][idx]
 
@@ -413,13 +420,15 @@ def run_interactive_menu():
 
     # 构建 selection
     if exec_mode == "all":
-        selection = {"mode": "all"}
+        threads = select_thread_count()
+        selection = {"mode": "all", "threads": threads}
     elif exec_mode == "marker":
         marker = select_marker()
         if marker is None:
             print("[!] 未选择标记，退出")
             sys.exit(1)
-        selection = {"mode": "marker", "marker": marker}
+        threads = select_thread_count()
+        selection = {"mode": "marker", "marker": marker, "threads": threads}
     else:  # specific
         specific_mode = select_specific_mode()
         selection = _drill_specific(specific_mode)

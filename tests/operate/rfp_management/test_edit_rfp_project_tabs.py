@@ -283,3 +283,42 @@ class TestEditRFPProjectTabs:
             label_text = await edit_page.get_group_org_name_filter_label()
             assert label_text == "集团机构名称", \
                 f"筛选控件标签期望为'集团机构名称'，实际为'{label_text}'"
+
+    @pytest.mark.asyncio
+    @pytest.mark.mark_20260604
+    @allure.title("邀约酒店集团-精确搜索: {test_data[description]} - {test_data[group_org_name]}")
+    @allure.description("""
+    测试: 在集团机构名称筛选框中输入完整名称执行精确搜索，验证结果列表中每条记录的名称与搜索词一致。
+
+    流程: 同上进入邀约酒店集团 → 输入集团机构名称 → 搜索 → 逐条验证结果
+    """)
+    @pytest.mark.parametrize("test_data", TestDataLoader.load_params(
+        "rfp_management_params.json", "invite_hotel_group_filter"
+    ))
+    async def test_invite_hotel_group_exact_search(self, page_module, operate_user, test_data):
+        edit_page = EditRFPProjectPage(page_module)
+
+        with allure.step("【步骤 1】导航至签约管理 > 签约页面"):
+            await edit_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】选择未启动 Tab"):
+            await edit_page.click_not_started_tab()
+
+        with allure.step(f"【步骤 3】搜索项目并点击修改: {test_data['project_name']}"):
+            await edit_page.search_and_open_project(test_data["project_name"])
+
+        with allure.step("【步骤 4】点击邀请酒店 Tab"):
+            await edit_page.click_tab(edit_page.INVITE_HOTEL_TAB_NAME)
+
+        with allure.step("【步骤 5】点击邀约酒店集团按钮"):
+            await edit_page.click_invite_hotel_group_button()
+
+        with allure.step(f"【步骤 6】输入集团机构名称并搜索: {test_data['group_org_name']}"):
+            await edit_page.search_group_org_name(test_data["group_org_name"])
+
+        with allure.step("【步骤 7】验证搜索结果"):
+            names = await edit_page.get_result_group_org_names()
+            assert len(names) > 0, "搜索结果为空，期望至少有一条记录"
+            for i, name in enumerate(names):
+                assert name == test_data["group_org_name"], \
+                    f"第{i + 1}条记录的机构名称'{name}'与搜索词'{test_data['group_org_name']}'不一致"

@@ -40,6 +40,12 @@ class EditRFPProjectPage(BasePage):
     EXPORT_BUTTON_TEXT = "^导出$"
     ADD_GROUP_INTENT_HOTEL_TEXT = "添加酒店集团意向单店"
 
+    # ========== 邀约酒店集团区域元素 ==========
+    INVITE_HOTEL_GROUP_BUTTON_TEXT = "邀约酒店集团"
+    GROUP_ORG_NAME_FILTER_LABEL_TEXT = "集团机构名称"
+    FILTER_INPUT_PLACEHOLDER = "请输入集团机构名称"
+    SEARCH_BUTTON_TEXT = "搜索"
+
     # ========== URL 项目 ID 提取 ==========
     PROJECT_ID_PATTERN = re.compile(r'projectId=(\d+)')
 
@@ -584,6 +590,109 @@ class EditRFPProjectPage(BasePage):
                 error_msg = f"导出集团酒店名单失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "导出错误")
+                raise
+
+    # ========== 邀约酒店集团筛选方法 ==========
+    async def click_invite_hotel_group_button(self) -> None:
+        """点击 邀约酒店集团 按钮展开区域"""
+        self.logger.info("开始点击邀约酒店集团按钮")
+
+        with allure.step("点击邀约酒店集团按钮"):
+            try:
+                btn = self.page.get_by_text(self.INVITE_HOTEL_GROUP_BUTTON_TEXT)
+                await btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await btn.click()
+                await self.page.wait_for_timeout(500)
+                self.logger.info("[OK] 已点击邀约酒店集团按钮")
+            except Exception as e:
+                error_msg = f"点击邀约酒店集团按钮失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "点击错误")
+                raise
+
+    async def get_group_org_name_filter_label(self) -> str:
+        """获取集团机构名称筛选控件的标签文本"""
+        self.logger.info("开始获取集团机构名称筛选控件标签")
+
+        with allure.step("获取筛选控件标签文本"):
+            try:
+                label = self.page.get_by_text(self.GROUP_ORG_NAME_FILTER_LABEL_TEXT)
+                await label.wait_for(timeout=timeout_config.get_element_timeout())
+                label_text = await label.text_content()
+                self.logger.info(f"筛选标签文本: {label_text}")
+                allure.attach(f"筛选标签: {label_text}", "标签验证")
+                return label_text or ""
+            except Exception as e:
+                error_msg = f"获取筛选控件标签失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "标签获取错误")
+                raise
+
+    async def search_group_org_name(self, group_name: str) -> None:
+        """在集团机构名称筛选输入框中输入名称并触发搜索
+
+        Args:
+            group_name: 集团机构名称
+        """
+        self.logger.info(f"开始搜索集团机构名称: {group_name}")
+
+        with allure.step(f"搜索集团机构名称: {group_name}"):
+            try:
+                filter_input = self.page.get_by_placeholder(self.FILTER_INPUT_PLACEHOLDER)
+                await filter_input.wait_for(timeout=timeout_config.get_element_timeout())
+                await filter_input.click()
+                await filter_input.fill(group_name)
+                await self.page.wait_for_timeout(200)
+                self.logger.info(f"集团机构名称已输入: {group_name}")
+
+                search_btn = self.page.get_by_text(self.SEARCH_BUTTON_TEXT)
+                await search_btn.wait_for(timeout=timeout_config.get_element_timeout())
+                await search_btn.click()
+                await self.page.wait_for_load_state("networkidle")
+                self.logger.info("[OK] 集团机构名称搜索完成")
+            except Exception as e:
+                error_msg = f"搜索集团机构名称失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "搜索错误")
+                raise
+
+    async def get_result_group_org_names(self) -> list:
+        """获取搜索结果列表中集团机构名称列的所有值
+
+        Returns:
+            list: 集团机构名称列表
+        """
+        self.logger.info("开始获取结果列表中的集团机构名称")
+
+        with allure.step("获取结果列表中集团机构名称列的值"):
+            try:
+                headers = self.page.locator(".el-table__header-wrapper th").all()
+                col_index = -1
+                for i, header in enumerate(headers):
+                    text = await header.text_content()
+                    if self.GROUP_ORG_NAME_FILTER_LABEL_TEXT in (text or ""):
+                        col_index = i
+                        break
+
+                if col_index == -1:
+                    self.logger.warning("未找到集团机构名称列，返回空列表")
+                    return []
+
+                rows = self.page.locator(".el-table__body-wrapper tbody tr").all()
+                names = []
+                for row in rows:
+                    cells = await row.locator("td").all()
+                    if col_index < len(cells):
+                        name = await cells[col_index].text_content()
+                        names.append((name or "").strip())
+
+                self.logger.info(f"获取到 {len(names)} 条集团机构名称")
+                allure.attach(f"结果: {names}", "机构名称列表")
+                return names
+            except Exception as e:
+                error_msg = f"获取集团机构名称列表失败: {str(e)}"
+                self.logger.error(error_msg)
+                allure.attach(error_msg, "列表获取错误")
                 raise
 
     # ========== 完整流程方法 ==========

@@ -305,5 +305,13 @@
       "target_price_tab": "已拒绝",
       "message": "修改价格状态：保持原价→已拒绝"
     }
+  ],
+  "invite_hotel_group_filter": [
+    {
+      "case_id": "group_filter_001",
+      "description": "邀约酒店集团-筛选标签和搜索验证",
+      "project_name": "自动化测试项目-固定未启动列",
+      "group_org_name": "加力协议代录专用"
+    }
   ]
 }

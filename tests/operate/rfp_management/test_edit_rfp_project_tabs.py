@@ -247,3 +247,39 @@ class TestEditRFPProjectTabs:
         - 验证结果: 通过 ✓
         """
         allure.attach(report, "测试报告", allure.attachment_type.TEXT)
+
+    # ======================== 邀约酒店集团 - 集团机构名称筛选 ========================
+
+    @pytest.mark.asyncio
+    @pytest.mark.mark_20260604
+    @allure.title("邀约酒店集团-筛选控件标签文案校验: {test_data[description]}")
+    @allure.description("""
+    测试: 验证邀约酒店集团区域筛选控件的标签显示为"集团机构名称"。
+
+    流程: 签约管理→签约→未启动Tab→搜索项目→修改项目→邀请酒店Tab→邀约酒店集团
+    """)
+    @pytest.mark.parametrize("test_data", TestDataLoader.load_params(
+        "rfp_management_params.json", "invite_hotel_group_filter"
+    ))
+    async def test_invite_hotel_group_filter_label(self, page_module, operate_user, test_data):
+        edit_page = EditRFPProjectPage(page_module)
+
+        with allure.step("【步骤 1】导航至签约管理 > 签约页面"):
+            await edit_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】选择未启动 Tab"):
+            await edit_page.click_not_started_tab()
+
+        with allure.step(f"【步骤 3】搜索项目并点击修改: {test_data['project_name']}"):
+            await edit_page.search_and_open_project(test_data["project_name"])
+
+        with allure.step("【步骤 4】点击邀请酒店 Tab"):
+            await edit_page.click_tab(edit_page.INVITE_HOTEL_TAB_NAME)
+
+        with allure.step("【步骤 5】点击邀约酒店集团按钮"):
+            await edit_page.click_invite_hotel_group_button()
+
+        with allure.step("【步骤 6】验证筛选控件标签文案"):
+            label_text = await edit_page.get_group_org_name_filter_label()
+            assert label_text == "集团机构名称", \
+                f"筛选控件标签期望为'集团机构名称'，实际为'{label_text}'"

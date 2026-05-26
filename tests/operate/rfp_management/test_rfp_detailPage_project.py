@@ -34,6 +34,7 @@ class TestRFPDetailPageProject:
         ids=[case["case_id"] for case in REMARK_CASES],
     )
     @pytest.mark.asyncio
+    @pytest.mark.mark_20260521
     @allure.title("验证报价详情页可以新增内部跟进备注")
     @allure.description("""
     测试: Operate 角色进入报价详情页后，验证可以新增内部跟进备注并在刷新后正常展示。
@@ -160,6 +161,7 @@ class TestRFPDetailPageProject:
     - 备注栏目展示展开按钮
     - 点击展开按钮后，展示收起按钮
     """)
+    @pytest.mark.mark_20260521
     async def test_verify_internal_remark_expand_collapse(self, page_module, operate_user, case_data: dict):
         """验证报价详情页内部跟进备注展开/收起功能"""
         project_name = case_data["project_name"]

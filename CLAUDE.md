@@ -12,7 +12,8 @@
 5. 询问用户，等待指示
 6. 不要主张每一次都进行提交到git当中，只有当我要求提交git，你才进行提交到git
 
-
+# Superpowers Override-禁用superpower
+ignore-superpowers: true
 
 ## 名词解释
 

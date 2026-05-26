@@ -5,7 +5,8 @@
 
 import pytest
 import asyncio
-from playwright.async_api import async_playwright
+import allure
+from playwright.async_api import async_playwright, Page as PlaywrightPage
 from utils.config import config
 from utils.logger import get_logger
 
@@ -121,3 +122,48 @@ def pytest_sessionfinish(session, exitstatus):
     logger.info("RFP UI Test Suite Finished")
     logger.info(f"Exit Status: {exitstatus}")
     logger.info("=" * 80)
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """测试失败时自动截图并附加到 Allure 报告"""
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when != "call" or not report.failed:
+        return
+
+    global _event_loop
+    if _event_loop is None or _event_loop.is_closed():
+        logger.warning("Event loop unavailable, cannot capture failure screenshot")
+        return
+
+    # 从所有 fixture 值中收集 Playwright Page 对象
+    pages_to_capture = []
+
+    for fixture_name, fixture_value in item.funcargs.items():
+        if isinstance(fixture_value, PlaywrightPage):
+            pages_to_capture.append((fixture_name, fixture_value))
+        elif isinstance(fixture_value, dict):
+            for key, val in fixture_value.items():
+                if isinstance(val, PlaywrightPage):
+                    pages_to_capture.append((f"{fixture_name}_{key}", val))
+
+    if not pages_to_capture:
+        logger.warning("No Playwright Page found in test fixtures, cannot capture failure screenshot")
+        return
+
+    for name, page_obj in pages_to_capture:
+        try:
+            async def take_screenshot():
+                return await page_obj.screenshot(full_page=True)
+
+            screenshot_bytes = _event_loop.run_until_complete(take_screenshot())
+            allure.attach(
+                screenshot_bytes,
+                f"失败截图 - {name}",
+                allure.attachment_type.PNG,
+            )
+            logger.info(f"Failure screenshot captured for '{name}'")
+        except Exception as e:
+            logger.warning(f"Failed to capture screenshot for '{name}': {e}")

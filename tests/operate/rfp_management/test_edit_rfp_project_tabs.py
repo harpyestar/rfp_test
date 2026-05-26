@@ -178,7 +178,8 @@ class TestEditRFPProjectTabs:
     # ======================== 导出邀约酒店名单验证测试（普通/集团）=======================
 
     @pytest.mark.asyncio
-    @allure.title("导出{test_data['export_type']}酒店名单包含酒店ID字段 - {test_data['description']}")
+    @pytest.mark.mark_20260521
+    @allure.title("导出{test_data[export_type]}酒店名单包含酒店ID字段 - {test_data[description]}")
     @allure.description("""
     测试: Operate 角色进入已启动项目的编辑页，在邀请酒店 Tab 中导出酒店名单，
     验证导出的 Excel 包含酒店 ID 字段，且数据与数据库查询结果一致。
@@ -189,7 +190,7 @@ class TestEditRFPProjectTabs:
     @pytest.mark.parametrize("test_data", TestDataLoader.load_params(
         "rfp_management_params.json", "export_hotel_list"
     ))
-    async def test_export_hotel_list_includes_hotel_id(self, page_module, operate_user, test_data):
+    async def test_export_hotel_list_includes_hotel_id(self, page_module, operate_user,  test_data):
         """
         验证导出的酒店名单包含酒店 ID 字段且数据一致（普通/集团共用）
 

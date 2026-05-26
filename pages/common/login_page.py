@@ -4,6 +4,8 @@
 所有超时值从 timeout_config 中读取，确保与 .env 配置一致
 """
 
+import asyncio
+import random
 from playwright.async_api import Page
 from pages.common.base_page import BasePage
 from utils.config import config
@@ -14,7 +16,7 @@ from typing import Dict, Any
 class LoginPage(BasePage):
     """登录页 Page Object"""
 
-    MOBILE_INPUT = 'input[type="text"]'  # Mobile field is type="text", not type="Mobile"
+    MOBILE_INPUT = 'input[placeholder="请输入手机号"]'
     PASSWORD_INPUT = 'input[type="password"]'
     LOGIN_BUTTON = 'button:has-text("登录")'  # Button has text "Login", not type="submit"
     LOGIN_FORM = 'form'
@@ -22,29 +24,35 @@ class LoginPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
 
-    async def navigate_to_login(self) -> None:
-        self.logger.info("Navigating to login page")
-        # 直接导航到 /login 路径
+    async def navigate_to_login(self, max_retries: int = 3) -> None:
         login_url = config.base_url.rstrip('/') + '/login.html#/login'
         self.logger.info(f"Login URL: {login_url}")
 
-        # 使用 commit 只等服务器开始响应，不等待所有资源/网络活动
-        # 避免 Vue.js SPA 的后台请求导致 networkidle/load 永远无法触发
-        # await self.page.goto(login_url, wait_until="commit", timeout=timeout_config.get_navigation_timeout())
-        await self.page.goto(login_url, wait_until="networkidle", timeout=timeout_config.get_navigation_timeout())
-        self.logger.info("Server responded, waiting for form elements...")
+        # 随机初始延迟(0~3s)，多 worker 并发时错开登录时机
+        init_jitter = random.uniform(0, 3)
+        await asyncio.sleep(init_jitter)
 
-        # 等待登录表单或输入框出现
-        try:
-            await self.wait_helper.wait_for_selector(
-                self.page,
-                'form, input[type="text"], input[type="password"]',  # 手机和密码输入框
-                timeout=timeout_config.get_element_timeout()
-            )
-            self.logger.info("Login form elements rendered successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to find form elements: {e}")
-            raise
+        last_error = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                await self.page.goto(login_url, wait_until="networkidle", timeout=timeout_config.get_navigation_timeout())
+                self.logger.info("Server responded, waiting for form elements...")
+                await self.wait_helper.wait_for_selector(
+                    self.page,
+                    'form, input[type="text"], input[type="password"]',
+                    timeout=timeout_config.get_element_timeout()
+                )
+                self.logger.info("Login form elements rendered successfully")
+                return
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries:
+                    delay = 5 * attempt + random.uniform(0, 3)
+                    self.logger.warning(f"导航登录页失败(第{attempt}次): {e}, {delay:.1f}秒后重试...")
+                    await asyncio.sleep(delay)
+
+        self.logger.error(f"导航登录页失败(已重试{max_retries}次): {last_error}")
+        raise last_error
 
     async def login(self, mobile: str, password: str) -> Dict[str, Any]:
         try:

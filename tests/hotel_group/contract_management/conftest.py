@@ -18,7 +18,8 @@ def page_module(browser, event_loop):
     logger.info("Creating module-level page for hotel group login state reuse")
 
     async def create_module_page():
-        context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+        from utils.browser_context import create_browser_context
+        context = await create_browser_context(browser)
         page = await context.new_page()
         logger.info("Module-level page created for hotel group tests")
         return page, context

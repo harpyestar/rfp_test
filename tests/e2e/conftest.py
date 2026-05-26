@@ -38,9 +38,8 @@ def e2e_pages(browser, event_loop):
         nonlocal operate_ctx, operate_page, hotel_ctx, hotel_page
 
         logger.info("=== 创建 Operate context + page ===")
-        operate_ctx = await browser.new_context(
-            viewport={"width": 1920, "height": 1080}
-        )
+        from utils.browser_context import create_browser_context
+        operate_ctx = await create_browser_context(browser)
         operate_page = await operate_ctx.new_page()
         login_page = LoginPage(operate_page)
         operate_account = config.get_account("operate")
@@ -51,9 +50,7 @@ def e2e_pages(browser, event_loop):
             raise Exception(f"Operate 登录失败: {result['message']}")
 
         logger.info("=== 创建 Hotel context + page ===")
-        hotel_ctx = await browser.new_context(
-            viewport={"width": 1920, "height": 1080}
-        )
+        hotel_ctx = await create_browser_context(browser)
         hotel_page = await hotel_ctx.new_page()
         login_page = LoginPage(hotel_page)
         hotel_account = config.get_account("hotel")

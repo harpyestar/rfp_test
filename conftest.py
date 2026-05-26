@@ -42,11 +42,14 @@ def browser(event_loop):
         logger.info("Initializing Playwright")
         _playwright = await async_playwright().start()
         logger.info("Starting browser")
-        browser = await _playwright.chromium.launch(
-            headless=config.headless,
-            slow_mo=config.slow_mo
-        )
-        logger.info(f"Browser launched - Headless: {config.headless}, SlowMo: {config.slow_mo}ms")
+        launch_kwargs = {
+            "headless": config.headless,
+            "slow_mo": config.slow_mo,
+        }
+        if config.browser_channel:
+            launch_kwargs["channel"] = config.browser_channel
+        browser = await _playwright.chromium.launch(**launch_kwargs)
+        logger.info(f"Browser launched (channel={config.browser_channel or 'default'}) - Headless: {config.headless}, SlowMo: {config.slow_mo}ms")
         return browser
 
     logger.info("Creating browser fixture")
@@ -72,7 +75,8 @@ def browser_context(browser, event_loop):
     """
     async def create_context():
         logger.info("Creating new browser context")
-        return await browser.new_context(viewport={"width": 1920, "height": 1080})
+        from utils.browser_context import create_browser_context
+        return await create_browser_context(browser)
 
     context = event_loop.run_until_complete(create_context())
     yield context

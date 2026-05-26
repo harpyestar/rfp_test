@@ -51,6 +51,10 @@ class Config:
         return os.getenv(key, "https://grfp-test.fangcang.com/")
 
     @property
+    def browser_channel(self) -> str:
+        return os.getenv("BROWSER_CHANNEL", "")
+
+    @property
     def headless(self) -> bool:
         return os.getenv("HEADLESS", "false").lower() == "true"
 

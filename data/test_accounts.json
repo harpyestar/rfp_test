@@ -1,8 +1,8 @@
 {
   "test": {
     "operate":    { "mobile": "18390471001", "password": "666666", "role_name": "平台端" },
-    "hotel":      { "mobile": "19100001002",             "password": "666666", "role_name": "酒店端" },
-    "hotelgroup": { "mobile": "18390471004",          "password": "666666", "role_name": "酒店集团端" }
+    "hotel":      { "mobile": "19100001002", "password": "666666", "role_name": "酒店端" },
+    "hotelgroup": { "mobile": "18390471004", "password": "666666", "role_name": "酒店集团端" }
   },
   "pre": {
     "operate":    { "mobile": "", "password": "", "role_name": "平台端" },

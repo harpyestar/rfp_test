@@ -117,7 +117,12 @@ def pytest_configure(config):
     logger.info("RFP UI Test Suite Started")
     logger.info(f"Environment: {app_config.test_env}")
     logger.info(f"Base URL: {app_config.base_url}")
+    logger.info(f"Rerun failures count: {app_config.rerun_failures_count}")
     logger.info("=" * 80)
+
+    # 从 .env 读取失败重试次数，配置 pytest-rerunfailures 插件，这个插件安装后自动注册，无需在代码引用
+    # 只需要配置给--reruns设定值就可以使用了
+    config.option.reruns = app_config.rerun_failures_count
 
 
 def pytest_sessionfinish(session, exitstatus):

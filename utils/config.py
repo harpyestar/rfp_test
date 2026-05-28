@@ -82,6 +82,10 @@ class Config:
     def allure_results_dir(self) -> str:
         return os.getenv("ALLURE_RESULTS_DIR", "reports/allure-results")
 
+    @property
+    def rerun_failures_count(self) -> int:
+        return int(os.getenv("RERUN_FAILURES_COUNT", "0"))
+
     def get_account(self, account_type: str) -> Dict[str, str]:
         """
         获取当前环境下指定角色的账号

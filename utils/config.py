@@ -86,6 +86,25 @@ class Config:
     def rerun_failures_count(self) -> int:
         return int(os.getenv("RERUN_FAILURES_COUNT", "0"))
 
+    @property
+    def rerun_failures_delay_min(self) -> float:
+        delay_str = os.getenv("RERUN_FAILURES_DELAY", "0")
+        try:
+            return float(delay_str.split("-")[0].strip())
+        except (ValueError, IndexError):
+            return 0.0
+
+    @property
+    def rerun_failures_delay_max(self) -> float:
+        delay_str = os.getenv("RERUN_FAILURES_DELAY", "0")
+        try:
+            parts = delay_str.split("-")
+            if len(parts) >= 2:
+                return float(parts[1].strip())
+            return float(parts[0].strip())
+        except (ValueError, IndexError):
+            return 0.0
+
     def get_account(self, account_type: str) -> Dict[str, str]:
         """
         获取当前环境下指定角色的账号

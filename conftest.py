@@ -5,12 +5,17 @@
 
 import pytest
 import asyncio
+import random
+import time
 import allure
 from playwright.async_api import async_playwright, Page as PlaywrightPage
 from utils.config import config
 from utils.logger import get_logger
 
 logger = get_logger("conftest", config.log_level)
+
+# 跟踪每个测试的重试次数（key=nodeid, value=已重试次数）
+_retry_counter: dict = {}
 
 # 全局变量
 _playwright = None
@@ -123,6 +128,8 @@ def pytest_configure(config):
     # 从 .env 读取失败重试次数，配置 pytest-rerunfailures 插件，这个插件安装后自动注册，无需在代码引用
     # 只需要配置给--reruns设定值就可以使用了
     config.option.reruns = app_config.rerun_failures_count
+    # 禁用插件自带的固定延迟，改用 pytest_runtest_makereport 注入随机延迟
+    config.option.reruns_delay = 0
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -131,6 +138,34 @@ def pytest_sessionfinish(session, exitstatus):
     logger.info("RFP UI Test Suite Finished")
     logger.info(f"Exit Status: {exitstatus}")
     logger.info("=" * 80)
+
+
+def _inject_retry_delay(item):
+    """在测试失败后、插件重试前，注入随机延迟以降低多线程并发碰撞概率"""
+    from utils.config import config as app_config
+
+    max_retries = app_config.rerun_failures_count
+    if max_retries <= 0:
+        return
+
+    min_delay = app_config.rerun_failures_delay_min
+    max_delay = app_config.rerun_failures_delay_max
+    if max_delay <= 0:
+        return
+
+    test_id = item.nodeid
+    current_retry = _retry_counter.get(test_id, 0)
+
+    if current_retry >= max_retries:
+        return
+
+    delay = random.uniform(min_delay, max_delay)
+    logger.info(
+        f"Retry delay {delay:.2f}s (attempt {current_retry + 1}/{max_retries}) "
+        f"for: {test_id}"
+    )
+    time.sleep(delay)
+    _retry_counter[test_id] = current_retry + 1
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -160,19 +195,28 @@ def pytest_runtest_makereport(item, call):
 
     if not pages_to_capture:
         logger.warning("No Playwright Page found in test fixtures, cannot capture failure screenshot")
-        return
+    else:
+        for name, page_obj in pages_to_capture:
+            try:
+                async def take_screenshot():
+                    return await page_obj.screenshot(full_page=True)
 
-    for name, page_obj in pages_to_capture:
-        try:
-            async def take_screenshot():
-                return await page_obj.screenshot(full_page=True)
+                screenshot_bytes = _event_loop.run_until_complete(take_screenshot())
+                allure.attach(
+                    screenshot_bytes,
+                    f"失败截图 - {name}",
+                    allure.attachment_type.PNG,
+                )
+                logger.info(f"Failure screenshot captured for '{name}'")
+            except Exception as e:
+                logger.warning(f"Failed to capture screenshot for '{name}': {e}")
 
-            screenshot_bytes = _event_loop.run_until_complete(take_screenshot())
-            allure.attach(
-                screenshot_bytes,
-                f"失败截图 - {name}",
-                allure.attachment_type.PNG,
-            )
-            logger.info(f"Failure screenshot captured for '{name}'")
-        except Exception as e:
-            logger.warning(f"Failed to capture screenshot for '{name}': {e}")
+    # 随机重试延迟：在 pytest-rerunfailures 重试前注入随机等待，降低多线程并发碰撞概率
+    _inject_retry_delay(item)
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_protocol(item, nextitem):
+    """测试完全结束后（含所有重试）清理重试计数"""
+    yield
+    _retry_counter.pop(item.nodeid, None)

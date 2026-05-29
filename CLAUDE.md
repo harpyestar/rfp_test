@@ -100,4 +100,12 @@ python+Playwright（pytest-playwright）+allure
    - 使用 `is_visible()` 检查元素可见性
    - 异常捕获并记录详细日志
 
+## 测试用例实现规范
+
+当根据 `docs/测试用例/` 目录下的 Excel 用例文件编写自动化测试代码时，遵守以下规则：
+
+1. **回填用例映射**：写完测试代码后，必须将映射回填到来源 Excel 文件的「用例映射」列，格式为 `tests/路径/文件名.py-类名.方法名`
+2. **禁止 success log**：测试方法末尾禁止写 `logger.info("[OK] XXX passed")`，测试结果由 pytest/Allure 报告体现
+3. **禁止自动跑测试**：写完代码后不要主动运行测试，由人工自行执行
+
 

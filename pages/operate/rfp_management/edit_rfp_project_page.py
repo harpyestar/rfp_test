@@ -42,7 +42,6 @@ class EditRFPProjectPage(BasePage):
 
     # ========== 邀请酒店集团区域元素 ==========
     INVITE_HOTEL_GROUP_BUTTON_PATTERN = r"^邀请酒店集团$"
-    # GROUP_ORG_NAME_FILTER_LABEL_TEXT = "集团机构名称"
     GROUP_ORG_NAME_FILTER_LABEL_TEXT = "集团机构名称"
 
     # ========== URL 项目 ID 提取 ==========
@@ -666,10 +665,10 @@ class EditRFPProjectPage(BasePage):
                 await option.click()
                 self.logger.info(f"已选择下拉选项包含: {group_name}")
 
-                # Step 4: 点击搜索按钮
-                search_btn = self.page.locator(self.SEARCH_BUTTON_SELECTOR).first
+                # Step 4: 点击第二个搜索按钮
+                search_btn = self.page.locator(".c-filter-button-container i.c-icon-search").nth(1)
                 await search_btn.wait_for(timeout=timeout_config.get_element_timeout())
-                await search_btn.click()
+                await search_btn.locator("..").click()
                 await self.page.wait_for_load_state("networkidle")
                 self.logger.info("[OK] 集团机构名称搜索完成")
             except Exception as e:
@@ -679,40 +678,23 @@ class EditRFPProjectPage(BasePage):
                 raise
 
     async def get_result_group_org_names(self) -> list:
-        """获取搜索结果列表中集团机构名称列的所有值
+        """获取搜索结果中所有 placeholder-label 的文本
 
         Returns:
-            list: 集团机构名称列表
+            list: 文本列表
         """
-        self.logger.info("开始获取结果列表中的集团机构名称")
+        self.logger.info("开始获取结果中的 placeholder-label 文本")
 
-        with allure.step("获取结果列表中集团机构名称列的值"):
+        with allure.step("获取 placeholder-label 文本"):
             try:
-                headers = self.page.locator(".el-table__header-wrapper th").all()
-                col_index = -1
-                for i, header in enumerate(headers):
-                    text = await header.text_content()
-                    if self.GROUP_ORG_NAME_FILTER_LABEL_TEXT in (text or ""):
-                        col_index = i
-                        break
-
-                if col_index == -1:
-                    self.logger.warning("未找到集团机构名称列，返回空列表")
-                    return []
-
-                rows = self.page.locator(".el-table__body-wrapper tbody tr").all()
-                names = []
-                for row in rows:
-                    cells = await row.locator("td").all()
-                    if col_index < len(cells):
-                        name = await cells[col_index].text_content()
-                        names.append((name or "").strip())
-
-                self.logger.info(f"获取到 {len(names)} 条集团机构名称")
-                allure.attach(f"结果: {names}", "机构名称列表")
+                cells = await self.page.locator(".placeholder-label").all()
+                names = [(await cell.text_content() or "").strip() for cell in cells]
+                names = [n for n in names if n]
+                self.logger.info(f"获取到 {len(names)} 条文本")
+                allure.attach(f"结果: {names}", "placeholder-label 列表")
                 return names
             except Exception as e:
-                error_msg = f"获取集团机构名称列表失败: {str(e)}"
+                error_msg = f"获取文本列表失败: {str(e)}"
                 self.logger.error(error_msg)
                 allure.attach(error_msg, "列表获取错误")
                 raise

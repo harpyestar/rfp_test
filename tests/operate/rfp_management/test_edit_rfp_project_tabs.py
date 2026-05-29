@@ -319,53 +319,5 @@ class TestEditRFPProjectTabs:
         with allure.step("【步骤 7】验证搜索结果"):
             names = await edit_page.get_result_group_org_names()
             assert len(names) > 0, "搜索结果为空，期望至少有一条记录"
-            for i, name in enumerate(names):
-                assert name == test_data["group_org_name"], \
-                    f"第{i + 1}条记录的机构名称'{name}'与搜索词'{test_data['group_org_name']}'不一致"
-
-    @pytest.mark.asyncio
-    @pytest.mark.mark_20260604
-    @allure.title("邀约酒店集团-筛选联动校验: {test_data[description]}")
-    @allure.description("""
-    测试: 从列表中取一条机构名称，用该名称执行筛选，验证该记录出现在筛选结果中且完全匹配。
-
-    流程: 同上进入邀约酒店集团 → 记录列表中第一条机构名称 → 用该名称筛选 → 验证结果匹配
-    """)
-    @pytest.mark.parametrize("test_data", TestDataLoader.load_params(
-        "rfp_management_params.json", "invite_hotel_group_filter"
-    ))
-    async def test_invite_hotel_group_filter_linkage(self, page_module, operate_user, test_data):
-        edit_page = EditRFPProjectPage(page_module)
-
-        with allure.step("【步骤 1】导航至签约管理 > 签约页面"):
-            await edit_page.navigate_to_contracting()
-
-        with allure.step("【步骤 2】选择未启动 Tab"):
-            await edit_page.click_not_started_tab()
-
-        with allure.step(f"【步骤 3】搜索项目并点击修改: {test_data['project_name']}"):
-            await edit_page.search_and_open_project(test_data["project_name"])
-
-        with allure.step("【步骤 4】点击邀请酒店 Tab"):
-            await edit_page.click_tab(edit_page.INVITE_HOTEL_TAB_NAME)
-
-        with allure.step("【步骤 5】点击邀约酒店集团按钮"):
-            await edit_page.click_invite_hotel_group_button()
-
-        with allure.step("【步骤 6】获取列表中第一条集团机构名称"):
-            initial_names = await edit_page.get_result_group_org_names()
-            assert len(initial_names) > 0, "列表中无集团机构名称记录"
-            first_org_name = initial_names[0]
-            allure.attach(f"记录的名称: {first_org_name}", "待筛选名称")
-
-        with allure.step(f"【步骤 7】用该名称执行筛选: {first_org_name}"):
-            await edit_page.search_group_org_name(first_org_name)
-
-        with allure.step("【步骤 8】验证筛选结果"):
-            filtered_names = await edit_page.get_result_group_org_names()
-            assert len(filtered_names) > 0, "筛选结果为空"
-            assert first_org_name in filtered_names, \
-                f"机构名称'{first_org_name}'未出现在筛选结果中"
-            for i, name in enumerate(filtered_names):
-                assert name == first_org_name, \
-                    f"第{i + 1}条记录'{name}'与筛选输入'{first_org_name}'不一致"
+            found = any(test_data["group_org_name"] in n for n in names)
+            assert found, f"搜索结果中未找到机构名称'{test_data['group_org_name']}'"

@@ -659,7 +659,7 @@ class EditRFPProjectPage(BasePage):
                 self.logger.info(f"集团机构名称已输入: {group_name}")
 
                 # Step 3: 下拉选项出现，选第一个包含输入名称的 option
-                option = self.page.get_by_role("option").filter(
+                option = self.page.locator(".c-select-option").filter(
                     has_text=group_name
                 ).first
                 await option.wait_for(timeout=timeout_config.get_element_timeout())

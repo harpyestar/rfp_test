@@ -97,6 +97,29 @@ class LoginPage(BasePage):
                 "message": error_message
             }
 
+    async def fill_mobile(self, mobile: str) -> None:
+        self.logger.debug("Filling mobile field")
+        await self.fill(self.MOBILE_INPUT, mobile)
+
+    async def fill_password(self, password: str) -> None:
+        self.logger.debug("Filling password field")
+        await self.fill(self.PASSWORD_INPUT, password)
+
+    async def click_login_button(self) -> None:
+        self.logger.info("Clicking login button")
+        await self.click(self.LOGIN_BUTTON)
+
+    async def wait_for_login_redirect(self) -> str:
+        self.logger.debug("Waiting for login redirect")
+        await self.wait_helper.wait_for_url(
+            self.page,
+            "**/home*",
+            timeout=timeout_config.get_navigation_timeout()
+        )
+        current_url = await self.get_current_url()
+        self.logger.info(f"Login redirect completed. Current URL: {current_url}")
+        return current_url
+
     async def is_login_page(self) -> bool:
         is_visible = await self.is_visible(self.LOGIN_FORM)
         self.logger.debug(f"Is login page: {is_visible}")

@@ -313,5 +313,39 @@
       "project_name": "自动化测试项目-固定未启动列",
       "group_org_name": "加力协议代录专用"
     }
+  ],
+  "contract_list_filter": [
+    {
+      "case_id": "contract_filter_001",
+      "description": "Tab切换-筛选条件保持",
+      "project_name": "自动化测试项目-固定未启动列"
+    },
+    {
+      "case_id": "contract_filter_002",
+      "description": "按机构名筛选",
+      "org_name": "测试机构hy"
+    },
+    {
+      "case_id": "contract_filter_003",
+      "description": "按签约项目名称筛选",
+      "project_name": "自动化测试项目-固定未启动列"
+    },
+    {
+      "case_id": "contract_filter_004",
+      "description": "按创建人筛选",
+      "creator_name": "郑尧辉"
+    },
+    {
+      "case_id": "contract_filter_005",
+      "description": "组合筛选",
+      "org_name": "测试机构hy",
+      "project_name": "hy-自动化项目-未完成项",
+      "creator_name": "郑尧辉"
+    },
+    {
+      "case_id": "contract_filter_006",
+      "description": "搜索结果为空",
+      "project_name": "自动化测试不存在项目xyz999"
+    }
   ]
 }

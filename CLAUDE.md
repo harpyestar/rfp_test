@@ -11,6 +11,7 @@
 4. 不要自作主张修改代码，让我来鉴定
 5. 询问用户，等待指示
 6. 不要主张每一次都进行提交到git当中，只有当我要求提交git，你才进行提交到git
+7. 每次回复我的时候，开头加上：主子
 
 [//]: # (# Superpowers Override-禁用superpower)
 
@@ -107,5 +108,4 @@ python+Playwright（pytest-playwright）+allure
 1. **回填用例映射**：写完测试代码后，必须将映射回填到来源 Excel 文件的「用例映射」列，格式为 `tests/路径/文件名.py-类名.方法名`
 2. **禁止 success log**：测试方法末尾禁止写 `logger.info("[OK] XXX passed")`，测试结果由 pytest/Allure 报告体现
 3. **禁止自动跑测试**：写完代码后不要主动运行测试，由人工自行执行
-
 

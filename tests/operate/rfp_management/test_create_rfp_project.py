@@ -122,7 +122,6 @@ class TestCreateRFPProject:
             ), f"Toast 内容不包含成功关键词，实际内容: {toast_text}"
 
         # ========== Step 15-18: 清理 - 作废项目 ==========
-
         with allure.step("【步骤 15】导航至签约管理页面"):
             await create_page.navigate_to_contracting()
 
@@ -155,3 +154,4 @@ class TestCreateRFPProject:
         - 测试状态: 通过 ✓
         """
         allure.attach(report, "测试结果报告", allure.attachment_type.TEXT)
+        

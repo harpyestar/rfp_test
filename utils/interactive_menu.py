@@ -157,9 +157,9 @@ def build_pytest_cmd(selection, env_config):
     cmd = [sys.executable, "-m", "pytest"]
 
     if mode == "all":
-        cmd += ["tests/", "-n", str(selection["threads"])]
+        cmd += ["tests/", "-n", str(selection["threads"]), "--dist", "loadgroup"]
     elif mode == "marker":
-        cmd += ["tests/", "-m", selection["marker"], "-n", str(selection["threads"])]
+        cmd += ["tests/", "-m", selection["marker"], "-n", str(selection["threads"]), "--dist", "loadgroup"]
     else:  # role / module / file / case
         path = selection.get("path")
         if not path:

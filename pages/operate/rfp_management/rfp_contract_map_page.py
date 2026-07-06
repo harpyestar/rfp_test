@@ -29,9 +29,8 @@ class RFPContractMapPage(BasePage):
     GO_CONTRACTING_BUTTON_TEXT = "去签约"
 
     # ========== 视图模式切换 ==========
-    VIEW_MODE_DROPDOWN_SELECTOR = "//div[@class='c-popper c-dropdown ml-10']"
-    LIST_MODE_OPTION_SELECTOR = "//div[@class='c-popper c-dropdown ml-10']//div[@title='列表模式']"
-    MAP_MODE_OPTION_SELECTOR = "//div[@class='c-popper c-dropdown ml-10']//div[@title='地图模式']"
+    MAP_SIGNING_TAB_SELECTOR = "#tab-mapSigning"
+    LIST_SIGNING_TAB_SELECTOR = "#tab-listSigning"
 
     # ========== 导入签约状态 ==========
     IMPORT_STATUS_FILE_SELECTOR = (
@@ -58,7 +57,7 @@ class RFPContractMapPage(BasePage):
     CONFIRM_BUTTON_TEXT = "确定"
 
     # ========== URL 验证关键字 ==========
-    BID_EVALUATION_KEYWORD = "bidEvaluationDetails"
+    BID_EVALUATION_KEYWORD = "intelligentSigning"
 
     def __init__(self, page: Page):
         super().__init__(page)
@@ -198,51 +197,42 @@ class RFPContractMapPage(BasePage):
     # 视图模式切换
     # ======================================================================
 
-    async def _open_view_mode_dropdown(self) -> None:
-        """打开视图模式切换下拉框"""
-        dropdown = self.page.locator(self.VIEW_MODE_DROPDOWN_SELECTOR)
-        await dropdown.wait_for(timeout=timeout_config.get_element_timeout())
-        await dropdown.click()
-        await self.page.wait_for_timeout(300)
-
     async def switch_to_list_mode(self) -> None:
-        """切换至列表模式"""
-        self.logger.info("切换至列表模式")
+        """切换至列表签约模式"""
+        self.logger.info("切换至列表签约")
 
-        with allure.step("切换至列表模式"):
+        with allure.step("切换至列表签约"):
             try:
-                await self._open_view_mode_dropdown()
-                list_mode = self.page.locator(self.LIST_MODE_OPTION_SELECTOR)
-                await list_mode.wait_for(
+                list_tab = self.page.locator(self.LIST_SIGNING_TAB_SELECTOR)
+                await list_tab.wait_for(
                     timeout=timeout_config.get_element_timeout()
                 )
-                await list_mode.click()
+                await list_tab.click()
                 await self.page.wait_for_timeout(300)
-                self.logger.info("[OK] 已切换至列表模式")
+                self.logger.info("[OK] 已切换至列表签约")
             except Exception as e:
-                error_msg = f"切换至列表模式失败: {str(e)}"
+                error_msg = f"切换至列表签约失败: {str(e)}"
                 self.logger.error(error_msg)
-                allure.attach(error_msg, "列表模式错误")
+                allure.attach(error_msg, "列表签约错误")
                 raise
 
     async def switch_to_map_mode(self) -> None:
-        """切换至地图模式"""
-        self.logger.info("切换至地图模式")
+        """切换至地图签约模式"""
+        self.logger.info("切换至地图签约")
 
-        with allure.step("切换至地图模式"):
+        with allure.step("切换至地图签约"):
             try:
-                await self._open_view_mode_dropdown()
-                map_mode = self.page.locator(self.MAP_MODE_OPTION_SELECTOR)
-                await map_mode.wait_for(
+                map_tab = self.page.locator(self.MAP_SIGNING_TAB_SELECTOR)
+                await map_tab.wait_for(
                     timeout=timeout_config.get_element_timeout()
                 )
-                await map_mode.click()
+                await map_tab.click()
                 await self.page.wait_for_timeout(300)
-                self.logger.info("[OK] 已切换至地图模式")
+                self.logger.info("[OK] 已切换至地图签约")
             except Exception as e:
-                error_msg = f"切换至地图模式失败: {str(e)}"
+                error_msg = f"切换至地图签约失败: {str(e)}"
                 self.logger.error(error_msg)
-                allure.attach(error_msg, "地图模式错误")
+                allure.attach(error_msg, "地图签约错误")
                 raise
 
     # ======================================================================
@@ -502,5 +492,5 @@ class RFPContractMapPage(BasePage):
     def url_contains_bid_evaluation(self, url: str) -> bool:
         """判断 URL 是否包含去签约成功跳转标识"""
         result = self.BID_EVALUATION_KEYWORD in url
-        self.logger.info(f"URL 包含 bidEvaluationDetails: {result}")
+        self.logger.info(f"URL 包含 intelligentSigning: {result}")
         return result

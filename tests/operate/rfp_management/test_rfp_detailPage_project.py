@@ -258,10 +258,10 @@ class TestRFPDetailPagePriceStatus:
     4. 切换到已启动 Tab
     5. 搜索指定项目
     6. 点击首个去签约按钮
-    7. 验证当前页面 URL 包含 bidEvaluationDetails
+    7. 验证当前页面 URL 包含 intelligentSigning
 
     预期结果:
-    - 点击去签约后，页面 URL 包含 bidEvaluationDetails 关键字
+    - 点击去签约后，页面 URL 包含 intelligentSigning 关键字
     """)
     async def test_priceDetail_startAction_priceDetail2jump(
         self, page_module, operate_user, case_data: dict
@@ -290,12 +290,12 @@ class TestRFPDetailPagePriceStatus:
         with allure.step("【步骤 5】点击首个去签约按钮"):
             await map_page.click_first_go_contracting_button()
 
-        with allure.step("【步骤 6】验证 URL 包含 bidEvaluationDetails"):
+        with allure.step("【步骤 6】验证 URL 包含 intelligentSigning"):
             current_url = await map_page.get_current_url()
             has_keyword = map_page.url_contains_bid_evaluation(current_url)
             assert has_keyword, (
                 f"去签约按钮跳转失败，跳转页面 URL 未包含 "
-                f"[bidEvaluationDetails]，实际 URL: {current_url}"
+                f"[intelligentSigning]，实际 URL: {current_url}"
             )
 
         result_report = f"""
@@ -308,7 +308,7 @@ class TestRFPDetailPagePriceStatus:
 
         【测试结果】
         - 跳转 URL: {current_url}
-        - URL 包含 bidEvaluationDetails: {has_keyword}
+        - URL 包含 intelligentSigning: {has_keyword}
         - 测试状态: 通过
         """
         allure.attach(result_report, "测试结果", allure.attachment_type.TEXT)
@@ -316,6 +316,7 @@ class TestRFPDetailPagePriceStatus:
         logger.info("RFP detail price jump test passed")
 
     @pytest.mark.asyncio
+    @pytest.mark.xdist_group("detail_page_price_status")
     @pytest.mark.parametrize(
         "case_data",
         PRICE_CHANGE_CASES,
@@ -332,9 +333,9 @@ class TestRFPDetailPagePriceStatus:
     4. 切换到已启动 Tab
     5. 搜索指定项目
     6. 点击首个去签约按钮
-    7. 切换到列表模式
+    7. 切换到列表签约
     8. 导入签约状态 Excel 文件，将酒店置为指定初始状态
-    9. 切换回地图模式
+    9. 切换回地图签约
 	10. 点击初始价格状态页签
 	11. 点击首个酒店
 	12. 点击查看报价详情按钮，打开报价详情页
@@ -400,13 +401,13 @@ class TestRFPDetailPagePriceStatus:
             allure.attachment_type.TEXT,
         )
 
-        with allure.step("【步骤 6】切换到列表模式"):
+        with allure.step("【步骤 6】切换到列表签约"):
             await map_page.switch_to_list_mode()
 
         with allure.step(f"【步骤 7】导入签约状态: {import_status}"):
             await map_page.import_signing_status_file(excel_path)
 
-        with allure.step("【步骤 8】切换回地图模式"):
+        with allure.step("【步骤 8】切换回地图签约"):
             await map_page.switch_to_map_mode()
 
         # ===== 打开报价详情页并执行操作 =====

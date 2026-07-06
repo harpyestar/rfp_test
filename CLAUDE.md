@@ -72,7 +72,7 @@ python+Playwright（pytest-playwright）+allure
 
 **核心原则：禁止硬编码超时值，所有超时配置统一管理**
 
-- 超时配置定义在 `.env.test`：`TIMEOUT_PAGE_LOAD`、`TIMEOUT_ELEMENT`、`TIMEOUT_NAVIGATION`、`TIMEOUT_QUICK_STEP`
+- 超时配置定义在 `.env`：`TIMEOUT_PAGE_LOAD`、`TIMEOUT_ELEMENT`、`TIMEOUT_NAVIGATION`、`TIMEOUT_QUICK_STEP`
 - 通过 `utils/timeout_config.py` 统一读取，仅此一处与 `.env` 交互
 - 代码中使用：`from utils.timeout_config import timeout_config; timeout_config.get_element_timeout()`
 - 不要在每个文件中重复读取 `.env`，不要在代码中硬编码任何超时数值（如 `timeout=10000`）

@@ -102,13 +102,13 @@ class TestCrossEndPriceStatusFlow:
             allure.attachment_type.TEXT,
         )
 
-        with allure.step("【Phase 1-6】切换到列表模式"):
+        with allure.step("【Phase 1-6】切换到列表签约"):
             await map_page.switch_to_list_mode()
 
         with allure.step(f"【Phase 1-7】导入签约状态: {import_status}"):
             await map_page.import_signing_status_file(excel_path)
 
-        with allure.step("【Phase 1-8】切换回地图模式"):
+        with allure.step("【Phase 1-8】切换回地图签约"):
             await map_page.switch_to_map_mode()
 
         # ================================================================

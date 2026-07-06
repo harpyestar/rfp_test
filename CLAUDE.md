@@ -12,6 +12,7 @@
 5. 询问用户，等待指示
 6. 不要主张每一次都进行提交到git当中，只有当我要求提交git，你才进行提交到git
 7. 每次回复我的时候，开头加上：主子
+8. 每次进行都需要使用superpower的skill
 
 [//]: # (# Superpowers Override-禁用superpower)
 

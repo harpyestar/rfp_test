@@ -281,3 +281,43 @@ class TestRFPContractList:
             is_empty = await contract_list_page.verify_list_is_empty()
             assert is_empty, "搜索不存在的项目后列表未显示为空"
 
+    @allure.title("验证重置筛选条件: {case_data[description]}")
+    @allure.description("""
+    测试: 执行筛选后点击重置按钮，验证筛选条件清空、列表恢复全部数据。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 按项目名称筛选并确认列表已过滤
+    3. 点击「重置」按钮
+    4. 验证所有筛选条件清空、列表重新加载
+    """)
+    @pytest.mark.parametrize("case_data", [c for c in CONTRACT_FILTER_CASES if c["case_id"] == "contract_filter_007"])
+    @pytest.mark.asyncio
+    async def test_reset_filter(self, page_module, operate_user, case_data):
+        """SIGN-LIST-012: 重置筛选条件"""
+        logger.info("Starting SIGN-LIST-012: 重置筛选条件")
+        contract_list_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_list_page.navigate_to_home()
+            await contract_list_page.navigate_to_contracting()
+
+        with allure.step(f"【步骤 2】按签约项目名称筛选: {case_data['project_name']}"):
+            await contract_list_page.search_by_project_name(case_data["project_name"])
+
+        with allure.step("【步骤 3】确认列表已按筛选条件过滤"):
+            filter_value = await contract_list_page.get_project_filter_value()
+            assert case_data["project_name"] in filter_value, \
+                f"筛选条件未生效，当前值: '{filter_value}'"
+
+        with allure.step("【步骤 4】点击「重置」按钮"):
+            await contract_list_page.reset_filter()
+
+        with allure.step("【步骤 5】验证所有筛选条件已清空"):
+            all_cleared = await contract_list_page.verify_all_filters_cleared()
+            assert all_cleared, "筛选条件未完全清空"
+
+        with allure.step("【步骤 6】验证列表重新加载恢复全部数据"):
+            is_empty = await contract_list_page.verify_list_is_empty()
+            assert not is_empty, "重置后列表为空，预期恢复全部数据"
+

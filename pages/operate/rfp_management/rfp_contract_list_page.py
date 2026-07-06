@@ -215,6 +215,45 @@ class RFPContractListPage(BasePage):
         self.logger.info(f"签约项目筛选框当前值: '{value}'")
         return value
 
+    async def reset_filter(self) -> None:
+        """点击「重置」按钮，重置所有筛选条件"""
+        self.logger.info("点击'重置'按钮")
+        reset_btn = self.page.locator(self.SEARCH_BUTTON_SELECTOR).nth(1)
+        await reset_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await reset_btn.click()
+        await self.page.wait_for_load_state("networkidle")
+        self.logger.info("[OK] 已点击'重置'按钮")
+
+    async def get_org_filter_value(self) -> str:
+        """获取机构名筛选输入框的当前值"""
+        input_field = self._filter_input_by_label(self.ORG_NAME_LABEL_TEXT)
+        await input_field.wait_for(timeout=timeout_config.get_element_timeout())
+        value = await input_field.input_value()
+        self.logger.info(f"机构名筛选框当前值: '{value}'")
+        return value
+
+    async def get_creator_filter_value(self) -> str:
+        """获取创建人筛选输入框的当前值"""
+        input_field = self._filter_input_by_label(self.CREATOR_LABEL_TEXT)
+        await input_field.wait_for(timeout=timeout_config.get_element_timeout())
+        value = await input_field.input_value()
+        self.logger.info(f"创建人筛选框当前值: '{value}'")
+        return value
+
+    async def verify_all_filters_cleared(self) -> bool:
+        """验证所有筛选条件已清空"""
+        project_val = await self.get_project_filter_value()
+        org_val = await self.get_org_filter_value()
+        creator_val = await self.get_creator_filter_value()
+        all_cleared = project_val == "" and org_val == "" and creator_val == ""
+        if all_cleared:
+            self.logger.info("所有筛选条件已清空")
+        else:
+            self.logger.error(
+                f"筛选条件未完全清空: 签约项目='{project_val}', 机构名='{org_val}', 创建人='{creator_val}'"
+            )
+        return all_cleared
+
     async def verify_list_is_empty(self) -> bool:
         """验证列表为空（无数据或显示暂无数据）"""
         self.logger.info("验证列表是否为空")

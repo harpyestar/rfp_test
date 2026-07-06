@@ -346,6 +346,11 @@
       "case_id": "contract_filter_006",
       "description": "搜索结果为空",
       "project_name": "自动化测试不存在项目xyz999"
+    },
+    {
+      "case_id": "contract_filter_007",
+      "description": "重置筛选条件",
+      "project_name": "自动化测试项目-固定未启动列"
     }
   ]
 }

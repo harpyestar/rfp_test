@@ -50,6 +50,9 @@ class RFPContractListPage(BasePage):
 
     SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
 
+    NEXT_PAGE_BUTTON_SELECTOR = ".c-icon-right-arrow"
+    PREV_PAGE_BUTTON_SELECTOR = ".c-icon-left-arrow"
+
     UNSTARTED_COLUMN_HEADERS = [
         "签约项目",
         "预计签约酒店数",
@@ -93,7 +96,7 @@ class RFPContractListPage(BasePage):
         )
         self.logger.info("[OK] 已进入 /home 页面")
 
-    async def navigate_to_contracting(self) -> None:
+    async def  navigate_to_contracting(self) -> None:
         """通过菜单进入签约页面：签约管理 → 签约"""
         self.logger.info("开始通过菜单进入签约页面")
         contract_management_menu = self.page.get_by_text(
@@ -367,6 +370,58 @@ class RFPContractListPage(BasePage):
                 f"筛选条件未完全清空: 签约项目='{project_val}', 机构名='{org_val}', 创建人='{creator_val}'"
             )
         return all_cleared
+
+    def _pagination_area(self):
+        """定位分页控件区域"""
+        return self.page.locator(".c-pagination, .el-pagination, .pagination").first
+
+    def _next_page_button(self):
+        """定位下一页按钮"""
+        return self._pagination_area().locator(self.NEXT_PAGE_BUTTON_SELECTOR)
+
+    async def verify_pagination_visible(self) -> bool:
+        """验证分页控件存在且可见"""
+        self.logger.info("验证分页控件可见")
+        pagination = self._pagination_area()
+        try:
+            await pagination.wait_for(timeout=timeout_config.get_element_timeout())
+            if await pagination.is_visible():
+                self.logger.info("分页控件可见")
+                return True
+        except Exception:
+            pass
+        self.logger.warning("分页控件未找到")
+        return False
+
+    async def get_current_page_number(self) -> int:
+        """获取当前激活的页码"""
+        active_page = self._pagination_area().locator(".c-pagination-button.selected").first
+        try:
+            text = await active_page.text_content()
+            page_num = int(text.strip()) if text else 1
+            self.logger.info(f"当前页码: {page_num}")
+            return page_num
+        except Exception:
+            self.logger.warning("无法获取当前页码，默认为1")
+            return 1
+
+    async def click_next_page(self) -> None:
+        """点击「下一页」按钮"""
+        self.logger.info("点击'下一页'按钮")
+        next_btn = self._next_page_button()
+        await next_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        prev_page = await self.get_current_page_number()
+        await next_btn.click()
+        await self.page.wait_for_load_state("networkidle")
+        new_page = await self.get_current_page_number()
+        self.logger.info(f"页码变化: {prev_page} → {new_page}")
+
+    async def get_page_row_count(self) -> int:
+        """获取当前页列表行数"""
+        rows = self.page.locator("table.c-table-body tbody tr.c-tr")
+        count = await rows.count()
+        self.logger.info(f"当前页列表行数: {count}")
+        return count
 
     async def verify_list_is_empty(self) -> bool:
         """验证列表为空（无数据或显示暂无数据）"""

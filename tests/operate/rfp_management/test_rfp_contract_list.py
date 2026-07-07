@@ -2,6 +2,7 @@
 签约项目列表页测试模块
 测试签约列表页的菜单导航、默认Tab展示和Tab切换功能
 """
+import time
 
 import allure
 import pytest
@@ -398,3 +399,50 @@ class TestRFPContractList:
             buttons_ok = await contract_list_page.verify_started_action_buttons()
             assert buttons_ok, "操作列按钮不完整"
 
+    @allure.title("验证分页功能正常")
+    @allure.description("""
+    测试: 在已启动Tab下验证列表底部分页控件存在、点击下一页后数据切换。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 切换到「已启动」Tab
+    3. 验证分页控件可见
+    4. 记录第一页行数
+    5. 点击「下一页」
+    6. 验证页码变化、数据刷新
+    """)
+    @pytest.mark.asyncio
+    async def test_verify_pagination(self, page_module, operate_user):
+        """SIGN-LIST-015: 分页功能"""
+        logger.info("Starting SIGN-LIST-015: 分页功能")
+        contract_list_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_list_page.navigate_to_home()
+            await contract_list_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】切换到「已启动」Tab"):
+            await contract_list_page.click_started_tab()
+
+        with allure.step("【步骤 3】验证分页控件可见"):
+            pagination_visible = await contract_list_page.verify_pagination_visible()
+            assert pagination_visible, "分页控件不可见"
+
+        with allure.step("【步骤 4】记录首页当前页码和行数"):
+            first_page_num = await contract_list_page.get_current_page_number()
+            first_page_rows = await contract_list_page.get_page_row_count()
+            logger.info(f"首页页码={first_page_num}, 行数={first_page_rows}")
+
+        with allure.step("【步骤 5】点击「下一页」"):
+            await contract_list_page.click_next_page()
+
+        with allure.step("【步骤 6】验证页码已变化"):
+            second_page_num = await contract_list_page.get_current_page_number()
+            assert second_page_num > first_page_num, \
+                f"页码未变化: {first_page_num} → {second_page_num}"
+
+        with allure.step("【步骤 7】验证第二页有数据"):
+            second_page_rows = await contract_list_page.get_page_row_count()
+            assert second_page_rows > 0, "第二页无数据"
+
+        time.sleep(10)

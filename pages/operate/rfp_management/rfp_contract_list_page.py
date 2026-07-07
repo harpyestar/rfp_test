@@ -44,6 +44,16 @@ class RFPContractListPage(BasePage):
         PERFORMANCE_BUTTON_TEXT,
     ]
 
+    C_DIALOG_SELECTOR = ".c-confirmer"
+    CONFIRM_BUTTON_TEXT = "确定"
+    CANCEL_BUTTON_TEXT = "取消"
+    DIALOG_TITLE_TEXT = "提示"
+    START_CONFIRM_MSG = "确定要启动么？"
+    START_SUCCESS_TEXT = "操作成功!"
+    STOP_CONFIRM_MSG = "确定要终止签约么？"
+    STOP_SUCCESS_TEXT = "操作成功!"
+    SUCCESS_TOAST_SELECTOR = ".c-view.c-notify-content-description.bold"
+
     ORG_NAME_LABEL_TEXT = "机构名"
     PROJECT_NAME_LABEL_TEXT = "签约项目"
     CREATOR_LABEL_TEXT = "创建人"
@@ -96,9 +106,23 @@ class RFPContractListPage(BasePage):
         )
         self.logger.info("[OK] 已进入 /home 页面")
 
-    async def  navigate_to_contracting(self) -> None:
-        """通过菜单进入签约页面：签约管理 → 签约"""
+    async def navigate_to_contracting(self) -> None:
+        """通过菜单进入签约页面：签约管理 → 签约（若子菜单已展开则直接点击）"""
         self.logger.info("开始通过菜单进入签约页面")
+        contracting_menu = self.page.get_by_text(
+            self.CONTRACTING_MENU_TEXT, exact=True
+        ).last
+        try:
+            await contracting_menu.wait_for(timeout=500)
+            if await contracting_menu.is_visible():
+                self.logger.info("'签约'子菜单已可见，直接点击")
+                await contracting_menu.click()
+                await self.page.wait_for_load_state("networkidle")
+                self.logger.info("[OK] 已进入签约页面")
+                return
+        except Exception:
+            pass
+
         contract_management_menu = self.page.get_by_text(
             self.CONTRACT_MANAGEMENT_MENU_TEXT, exact=True
         )
@@ -107,9 +131,6 @@ class RFPContractListPage(BasePage):
         self.logger.info("已展开'签约管理'子菜单")
         await self.page.wait_for_timeout(300)
 
-        contracting_menu = self.page.get_by_text(
-            self.CONTRACTING_MENU_TEXT, exact=True
-        ).last
         await contracting_menu.wait_for(timeout=timeout_config.get_element_timeout())
         await contracting_menu.click()
         await self.page.wait_for_load_state("networkidle")
@@ -447,4 +468,66 @@ class RFPContractListPage(BasePage):
             return True
         except Exception:
             self.logger.warning(f"列表中未找到项目: {project_name}")
+            return False
+
+    async def click_start_button_for_first_row(self) -> None:
+        """点击第一行的「启动」按钮"""
+        self.logger.info("点击第一行的'启动'按钮")
+        start_btn = self.page.get_by_text(self.START_BUTTON_TEXT, exact=True).first
+        await start_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await start_btn.click()
+        self.logger.info("已点击'启动'按钮")
+
+    async def click_stop_button_for_first_row(self) -> None:
+        """点击第一行的「终止」按钮"""
+        self.logger.info("点击第一行的'终止'按钮")
+        stop_btn = self.page.get_by_text(self.STOP_BUTTON_TEXT, exact=True).first
+        await stop_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await stop_btn.click()
+        self.logger.info("已点击'终止'按钮")
+
+    async def verify_confirm_dialog_visible(self, expected_message: str) -> bool:
+        """验证确认弹窗可见且内容匹配"""
+        self.logger.info(f"验证确认弹窗: {expected_message}")
+        dialog = self.page.locator(self.C_DIALOG_SELECTOR).first
+        try:
+            await dialog.wait_for(timeout=timeout_config.get_element_timeout())
+            title = dialog.get_by_text(self.DIALOG_TITLE_TEXT, exact=True)
+            message = dialog.get_by_text(expected_message)
+            title_ok = await title.is_visible()
+            msg_ok = await message.is_visible()
+            if title_ok and msg_ok:
+                self.logger.info(f"确认弹窗内容匹配: 标题='提示', 内容='{expected_message}'")
+                return True
+            self.logger.error(f"弹窗内容不匹配: title={title_ok}, message={msg_ok}")
+            return False
+        except Exception:
+            self.logger.error("确认弹窗未出现")
+            return False
+
+    async def click_confirm_in_dialog(self) -> None:
+        """在弹窗中点击「确认」按钮"""
+        self.logger.info("点击弹窗中的'确定'按钮")
+        dialog = self.page.locator(self.C_DIALOG_SELECTOR).first
+        confirm_btn = dialog.get_by_text(self.CONFIRM_BUTTON_TEXT, exact=True)
+        await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await confirm_btn.click()
+        await self.page.wait_for_load_state("networkidle")
+        self.logger.info("已点击'确认'按钮")
+
+    async def verify_success_toast(self, expected_text: str) -> bool:
+        """验证成功 toast 提示出现"""
+        self.logger.info(f"验证成功 toast: {expected_text}")
+        try:
+            toast = self.page.locator(self.SUCCESS_TOAST_SELECTOR)
+            await toast.wait_for(timeout=timeout_config.get_element_timeout())
+            toast_text = await toast.text_content()
+            toast_text = toast_text.strip() if toast_text else ""
+            if expected_text in toast_text:
+                self.logger.info(f"成功 toast 已出现: {toast_text}")
+                return True
+            self.logger.warning(f"toast 内容不匹配: 期望='{expected_text}', 实际='{toast_text}'")
+            return False
+        except Exception:
+            self.logger.warning(f"未检测到成功 toast: {expected_text}")
             return False

@@ -2,10 +2,12 @@
 签约项目列表页测试模块
 测试签约列表页的菜单导航、默认Tab展示和Tab切换功能
 """
-import time
+import json
+from datetime import datetime
 
 import allure
 import pytest
+from pages.operate.rfp_management.create_rfp_project_page import CreateRFPProjectPage
 from pages.operate.rfp_management.rfp_contract_list_page import RFPContractListPage
 from utils.config import config
 from utils.logger import get_logger
@@ -18,6 +20,13 @@ CONTRACT_FILTER_CASES = TestDataLoader.load_params(
     "rfp_management_params.json",
     "contract_list_filter",
 )
+
+with open(config.PROJECT_ROOT / "data" / "test_cases" / "rfp_management_params.json", encoding="utf-8") as _f:
+    START_STOP_PROJECT_DATA = json.load(_f)["start_and_stop_project"][0]
+
+
+def generate_project_name(prefix: str) -> str:
+    return f"{prefix}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
 
 @allure.feature("RFP 项目管理")
@@ -445,4 +454,83 @@ class TestRFPContractList:
             second_page_rows = await contract_list_page.get_page_row_count()
             assert second_page_rows > 0, "第二页无数据"
 
-        time.sleep(10)
+    @allure.title("验证启动项目→终止项目联动")
+    @allure.description("""
+    联动测试 SIGN-LIST-016 + SIGN-LIST-023：
+    创建项目 → 启动 → 到已启动Tab终止项目。
+
+    测试流程:
+    1. 创建新项目
+    2. 进入签约列表，搜索项目，点击「启动」并确认
+    3. 切换到已启动Tab，搜索项目，点击「终止」并确认
+    """)
+    @pytest.mark.asyncio
+    async def test_start_and_stop_project(self, page_module, operate_user):
+        """SIGN-LIST-016: 启动项目 + SIGN-LIST-023: 终止项目"""
+        project_name = generate_project_name(START_STOP_PROJECT_DATA["project_name_prefix"])
+        logger.info(f"Starting SIGN-LIST-016+023 联动测试, 项目={project_name}")
+
+        # ===== 阶段1: 创建项目 =====
+        with allure.step("【阶段1-创建】创建新项目"):
+            create_page = CreateRFPProjectPage(page_module)
+            await create_page.navigate_to_create_project()
+            await create_page.select_contracting_agency(START_STOP_PROJECT_DATA["agency_name"])
+            await create_page.fill_project_name(project_name)
+            await create_page.fill_contact_person(START_STOP_PROJECT_DATA["contact_person"])
+            await create_page.fill_contact_phone(START_STOP_PROJECT_DATA["contact_phone"])
+            await create_page.select_invitation_sign_method()
+            await create_page.select_registration_date(START_STOP_PROJECT_DATA["start_day"], START_STOP_PROJECT_DATA["end_day"])
+            await create_page.select_first_round_date(START_STOP_PROJECT_DATA["start_day"], START_STOP_PROJECT_DATA["end_day"])
+            await create_page.select_agreement_date(START_STOP_PROJECT_DATA["start_day"], START_STOP_PROJECT_DATA["end_day"])
+            await create_page.fill_expected_hotel_count(START_STOP_PROJECT_DATA["expected_hotel_count"])
+            await create_page.fill_min_diff_std(START_STOP_PROJECT_DATA["min_diff_std"])
+            await create_page.fill_max_diff_std(START_STOP_PROJECT_DATA["max_diff_std"])
+            await create_page.click_save_and_next()
+            toast_text = await create_page.verify_save_success()
+            assert toast_text, "项目创建后未检测到成功提示"
+            logger.info(f"项目创建完成: {project_name}")
+
+        # ===== 阶段2: SIGN-LIST-016 启动项目 =====
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【阶段2-启动】进入签约列表并搜索项目"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【阶段2-启动】点击「启动」按钮"):
+            await contract_page.click_start_button_for_first_row()
+
+        with allure.step("【阶段2-启动】验证确认弹窗"):
+            dialog_ok = await contract_page.verify_confirm_dialog_visible(
+                contract_page.START_CONFIRM_MSG
+            )
+            assert dialog_ok, "启动确认弹窗未出现或内容不匹配"
+
+        with allure.step("【阶段2-启动】点击弹窗「确认」"):
+            await contract_page.click_confirm_in_dialog()
+
+        with allure.step("【阶段2-启动】验证启动成功提示"):
+            toast_ok = await contract_page.verify_success_toast(contract_page.START_SUCCESS_TEXT)
+            assert toast_ok, "未检测到启动成功提示"
+
+        # ===== 阶段3: SIGN-LIST-023 终止项目 =====
+        with allure.step("【阶段3-终止】切换到已启动Tab并搜索项目"):
+            await contract_page.click_started_tab()
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【阶段3-终止】点击「终止」按钮"):
+            await contract_page.click_stop_button_for_first_row()
+
+        with allure.step("【阶段3-终止】验证确认弹窗"):
+            dialog_ok = await contract_page.verify_confirm_dialog_visible(
+                contract_page.STOP_CONFIRM_MSG
+            )
+            assert dialog_ok, "终止确认弹窗未出现或内容不匹配"
+
+        with allure.step("【阶段3-终止】点击弹窗「确认」"):
+            await contract_page.click_confirm_in_dialog()
+
+        with allure.step("【阶段3-终止】验证终止成功提示"):
+            toast_ok = await contract_page.verify_success_toast(contract_page.STOP_SUCCESS_TEXT)
+            assert toast_ok, "未检测到终止成功提示"

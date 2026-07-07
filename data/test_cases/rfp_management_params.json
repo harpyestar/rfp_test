@@ -14,6 +14,21 @@
       "max_diff_std": "500"
     }
   ],
+  "start_and_stop_project": [
+    {
+      "case_id": "start_stop_001",
+      "description": "启动项目+终止项目联动",
+      "agency_name": "测试机构hy",
+      "project_name_prefix": "自动化测试-启动终止联动",
+      "contact_person": "荷叶",
+      "contact_phone": "17755389215",
+      "start_day": 1,
+      "end_day": 28,
+      "expected_hotel_count": "100",
+      "min_diff_std": "100",
+      "max_diff_std": "500"
+    }
+  ],
   "rfp_contracting_map": [
     {
       "case_id": "map_001",

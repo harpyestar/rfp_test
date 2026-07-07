@@ -9,6 +9,7 @@ from pages.operate.rfp_management.rfp_contract_list_page import RFPContractListP
 from utils.config import config
 from utils.logger import get_logger
 from utils.test_data_loader import TestDataLoader
+from utils.timeout_config import timeout_config
 
 logger = get_logger("tests.operate.rfp_management.test_rfp_contract_list", config.log_level)
 
@@ -320,4 +321,44 @@ class TestRFPContractList:
         with allure.step("【步骤 6】验证列表重新加载恢复全部数据"):
             is_empty = await contract_list_page.verify_list_is_empty()
             assert not is_empty, "重置后列表为空，预期恢复全部数据"
+
+    @allure.title("验证未启动Tab列表字段展示完整")
+    @allure.description("""
+    测试: 在未启动Tab下校验列表字段列完整且第一行有数据。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 确保在「未启动」Tab
+    3. 逐一核对列表字段列名称
+    4. 验证第一行数据完整
+    5. 验证操作列按钮存在
+    """)
+    @pytest.mark.asyncio
+    async def test_verify_unstarted_list_fields(self, page_module, operate_user):
+        """SIGN-LIST-013: 签约项目字段校验-未启动Tab"""
+        logger.info("Starting SIGN-LIST-013: 签约项目字段校验-未启动Tab")
+        contract_list_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_list_page.navigate_to_home()
+            await contract_list_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】确保在「未启动」Tab"):
+            unstarted_tab = contract_list_page.page.get_by_text(
+                contract_list_page.UNSTARTED_TAB_TEXT, exact=True
+            ).first
+            await unstarted_tab.wait_for(timeout=timeout_config.get_element_timeout())
+            assert await unstarted_tab.is_visible(), "未启动Tab不可见"
+
+        with allure.step("【步骤 3】逐一核对列表字段列名称"):
+            columns_ok = await contract_list_page.verify_unstarted_list_columns()
+            assert columns_ok, "未启动Tab列表字段列不完整"
+
+        with allure.step("【步骤 4】验证第一行数据完整"):
+            has_data = await contract_list_page.verify_unstarted_first_row_has_data()
+            assert has_data, "未启动Tab列表第一行无数据"
+
+        with allure.step("【步骤 5】验证操作列按钮：启动、修改项目、作废"):
+            buttons_ok = await contract_list_page.verify_unstarted_action_buttons()
+            assert buttons_ok, "操作列按钮不完整"
 

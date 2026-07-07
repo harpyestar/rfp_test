@@ -32,6 +32,18 @@ class RFPContractListPage(BasePage):
     EXPORT_QUOTE_BUTTON_TEXT = "导出报价"
     PERFORMANCE_BUTTON_TEXT = "履约情况"
 
+    GO_TO_SIGN_BUTTON_TEXT = "去签约"
+    MODIFY_BUTTON_TEXT = "修改"
+    STOP_BUTTON_TEXT = "终止"
+
+    STARTED_ACTION_BUTTONS = [
+        GO_TO_SIGN_BUTTON_TEXT,
+        MODIFY_BUTTON_TEXT,
+        STOP_BUTTON_TEXT,
+        EXPORT_QUOTE_BUTTON_TEXT,
+        PERFORMANCE_BUTTON_TEXT,
+    ]
+
     ORG_NAME_LABEL_TEXT = "机构名"
     PROJECT_NAME_LABEL_TEXT = "签约项目"
     CREATOR_LABEL_TEXT = "创建人"
@@ -45,6 +57,18 @@ class RFPContractListPage(BasePage):
         "报名起止日",
         "报价起止日",
         "公布评标结果日",
+        "创建信息",
+        "操作",
+    ]
+
+    STARTED_COLUMN_HEADERS = [
+        "签约项目",
+        "预计签约酒店数",
+        "差标范围(元)",
+        "报名起止日",
+        "报价起止日",
+        "公布结果日",
+        "已报价/已邀酒店数",
         "创建信息",
         "操作",
     ]
@@ -146,6 +170,53 @@ class RFPContractListPage(BasePage):
         cell_count = await cells.count()
         self.logger.info(f"第一行有 {cell_count} 个单元格")
         return cell_count >= len(self.UNSTARTED_COLUMN_HEADERS)
+
+    async def verify_started_list_columns(self) -> bool:
+        """验证已启动Tab列表字段列完整"""
+        self.logger.info("验证已启动Tab列表字段列")
+        table_header = self.page.locator(".c-table").first
+        await table_header.wait_for(timeout=timeout_config.get_element_timeout())
+        for col_name in self.STARTED_COLUMN_HEADERS:
+            col = table_header.get_by_text(col_name, exact=True).first
+            try:
+                await col.wait_for(timeout=timeout_config.get_element_timeout())
+                if not await col.is_visible():
+                    self.logger.error(f"列 '{col_name}' 不可见")
+                    return False
+                self.logger.info(f"列 '{col_name}' 可见")
+            except Exception:
+                self.logger.error(f"列 '{col_name}' 未找到")
+                return False
+        return True
+
+    async def verify_started_action_buttons(self) -> bool:
+        """验证已启动Tab操作列按钮：去签约、修改、终止、导出报价、履约情况"""
+        self.logger.info("验证已启动Tab操作按钮")
+        for btn_text in self.STARTED_ACTION_BUTTONS:
+            btn = self.page.get_by_text(btn_text, exact=True).first
+            try:
+                await btn.wait_for(timeout=timeout_config.get_element_timeout())
+                if not await btn.is_visible():
+                    self.logger.error(f"按钮 '{btn_text}' 不可见")
+                    return False
+                self.logger.info(f"按钮 '{btn_text}' 可见")
+            except Exception:
+                self.logger.warning(f"按钮 '{btn_text}' 未找到（列表可能为空）")
+        return True
+
+    async def verify_started_first_row_has_data(self) -> bool:
+        """验证已启动Tab列表第一行有数据（非空列表）"""
+        self.logger.info("验证已启动Tab列表第一行有数据")
+        rows = self.page.locator("table.c-table-body tbody tr.c-tr")
+        count = await rows.count()
+        if count == 0:
+            self.logger.warning("列表为空，无数据行")
+            return False
+        first_row = rows.first
+        cells = first_row.locator("td")
+        cell_count = await cells.count()
+        self.logger.info(f"第一行有 {cell_count} 个单元格")
+        return cell_count >= len(self.STARTED_COLUMN_HEADERS)
 
     async def click_completed_tab(self) -> None:
         """点击「已完成」Tab"""

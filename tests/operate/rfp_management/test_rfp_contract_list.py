@@ -362,3 +362,39 @@ class TestRFPContractList:
             buttons_ok = await contract_list_page.verify_unstarted_action_buttons()
             assert buttons_ok, "操作列按钮不完整"
 
+    @allure.title("验证已启动Tab列表字段展示完整")
+    @allure.description("""
+    测试: 在已启动Tab下校验列表字段列完整、操作按钮正确。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 切换到「已启动」Tab
+    3. 逐一核对列表字段列名称（含已报价/受邀酒店数）
+    4. 验证第一行数据完整
+    5. 验证操作列按钮：去签约、修改、终止、导出报价、履约情况
+    """)
+    @pytest.mark.asyncio
+    async def test_verify_started_list_fields(self, page_module, operate_user):
+        """SIGN-LIST-014: 签约项目字段校验-已启动Tab"""
+        logger.info("Starting SIGN-LIST-014: 签约项目字段校验-已启动Tab")
+        contract_list_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_list_page.navigate_to_home()
+            await contract_list_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】切换到「已启动」Tab"):
+            await contract_list_page.click_started_tab()
+
+        with allure.step("【步骤 3】逐一核对列表字段列名称"):
+            columns_ok = await contract_list_page.verify_started_list_columns()
+            assert columns_ok, "已启动Tab列表字段列不完整"
+
+        with allure.step("【步骤 4】验证第一行数据完整"):
+            has_data = await contract_list_page.verify_started_first_row_has_data()
+            assert has_data, "已启动Tab列表第一行无数据"
+
+        with allure.step("【步骤 5】验证操作列按钮：去签约、修改、终止、导出报价、履约情况"):
+            buttons_ok = await contract_list_page.verify_started_action_buttons()
+            assert buttons_ok, "操作列按钮不完整"
+

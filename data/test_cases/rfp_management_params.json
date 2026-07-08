@@ -27,6 +27,26 @@
       "expected_hotel_count": "100",
       "min_diff_std": "100",
       "max_diff_std": "500"
+    },
+    {
+      "case_id": "start_stop_002",
+      "description": "作废项目",
+      "agency_name": "测试机构hy",
+      "project_name_prefix": "自动化测试-作废项目",
+      "contact_person": "荷叶",
+      "contact_phone": "17755389215",
+      "start_day": 1,
+      "end_day": 28,
+      "expected_hotel_count": "100",
+      "min_diff_std": "100",
+      "max_diff_std": "500"
+    }
+  ],
+  "void_cancel_project": [
+    {
+      "case_id": "void_cancel_001",
+      "description": "作废项目-取消",
+      "project_name": "自动化测试项目-固定未启动列"
     }
   ],
   "rfp_contracting_map": [

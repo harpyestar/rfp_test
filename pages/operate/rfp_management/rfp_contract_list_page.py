@@ -3,7 +3,7 @@
 负责签约列表页的菜单导航、Tab 切换验证和操作按钮验证
 """
 
-from playwright.async_api import Page
+from playwright.async_api import Page, expect
 from pages.common.base_page import BasePage
 from utils.config import config
 from utils.timeout_config import timeout_config
@@ -52,6 +52,8 @@ class RFPContractListPage(BasePage):
     START_SUCCESS_TEXT = "操作成功!"
     STOP_CONFIRM_MSG = "确定要终止签约么？"
     STOP_SUCCESS_TEXT = "操作成功!"
+    VOID_CONFIRM_MSG = "确定要废标么？"
+    VOID_SUCCESS_TEXT = "操作成功!"
     SUCCESS_TOAST_SELECTOR = ".c-view.c-notify-content-description.bold"
 
     ORG_NAME_LABEL_TEXT = "机构名"
@@ -470,6 +472,13 @@ class RFPContractListPage(BasePage):
             self.logger.warning(f"列表中未找到项目: {project_name}")
             return False
 
+    async def expect_project_disappeared(self, project_name: str) -> None:
+        """断言项目从列表消失（内置自动等待重试）"""
+        self.logger.info(f"断言项目从列表消失: {project_name}")
+        cell = self.page.get_by_text(project_name, exact=True).first
+        await expect(cell).not_to_be_visible(timeout=timeout_config.get_element_timeout())
+        self.logger.info(f"项目已从列表消失: {project_name}")
+
     async def click_start_button_for_first_row(self) -> None:
         """点击第一行的「启动」按钮"""
         self.logger.info("点击第一行的'启动'按钮")
@@ -485,6 +494,14 @@ class RFPContractListPage(BasePage):
         await stop_btn.wait_for(timeout=timeout_config.get_element_timeout())
         await stop_btn.click()
         self.logger.info("已点击'终止'按钮")
+
+    async def click_void_button_for_first_row(self) -> None:
+        """点击第一行的「作废」按钮"""
+        self.logger.info("点击第一行的'作废'按钮")
+        void_btn = self.page.get_by_text(self.VOID_BUTTON_TEXT, exact=True).first
+        await void_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await void_btn.click()
+        self.logger.info("已点击'作废'按钮")
 
     async def verify_confirm_dialog_visible(self, expected_message: str) -> bool:
         """验证确认弹窗可见且内容匹配"""
@@ -504,6 +521,26 @@ class RFPContractListPage(BasePage):
         except Exception:
             self.logger.error("确认弹窗未出现")
             return False
+
+    async def click_cancel_in_dialog(self) -> None:
+        """在弹窗中点击「取消」按钮"""
+        self.logger.info("点击弹窗中的'取消'按钮")
+        dialog = self.page.locator(self.C_DIALOG_SELECTOR).first
+        cancel_btn = dialog.get_by_text(self.CANCEL_BUTTON_TEXT, exact=True)
+        await cancel_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await cancel_btn.click()
+        self.logger.info("已点击'取消'按钮")
+
+    async def verify_confirm_dialog_disappeared(self) -> bool:
+        """验证确认弹窗已关闭"""
+        self.logger.info("验证确认弹窗已关闭")
+        dialog = self.page.locator(self.C_DIALOG_SELECTOR)
+        count = await dialog.count()
+        if count == 0:
+            self.logger.info("确认弹窗已关闭")
+            return True
+        self.logger.warning(f"确认弹窗仍然可见，共 {count} 个")
+        return False
 
     async def click_confirm_in_dialog(self) -> None:
         """在弹窗中点击「确认」按钮"""

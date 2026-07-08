@@ -22,7 +22,11 @@ CONTRACT_FILTER_CASES = TestDataLoader.load_params(
 )
 
 with open(config.PROJECT_ROOT / "data" / "test_cases" / "rfp_management_params.json", encoding="utf-8") as _f:
-    START_STOP_PROJECT_DATA = json.load(_f)["start_and_stop_project"][0]
+    _ALL_PARAMS = json.load(_f)
+    _START_STOP_ALL = _ALL_PARAMS["start_and_stop_project"]
+    START_STOP_PROJECT_DATA = _START_STOP_ALL[0]
+    VOID_PROJECT_DATA = _START_STOP_ALL[1]
+    VOID_CANCEL_DATA = _ALL_PARAMS["void_cancel_project"][0]
 
 
 def generate_project_name(prefix: str) -> str:
@@ -534,3 +538,112 @@ class TestRFPContractList:
         with allure.step("【阶段3-终止】验证终止成功提示"):
             toast_ok = await contract_page.verify_success_toast(contract_page.STOP_SUCCESS_TEXT)
             assert toast_ok, "未检测到终止成功提示"
+
+    @allure.title("验证作废项目-确认")
+    @allure.description("""
+    测试 SIGN-LIST-019：创建项目 → 未启动Tab下作废项目。
+
+    测试流程:
+    1. 创建新项目
+    2. 进入签约列表，搜索项目，点击「作废」并确认
+    3. 验证项目从列表消失
+    """)
+    @pytest.mark.asyncio
+    async def test_void_project(self, page_module, operate_user):
+        """SIGN-LIST-019: 作废项目-确认"""
+        project_name = generate_project_name(VOID_PROJECT_DATA["project_name_prefix"])
+        logger.info(f"Starting SIGN-LIST-019 作废项目测试, 项目={project_name}")
+
+        # ===== 阶段1: 创建项目 =====
+        with allure.step("【阶段1-创建】创建新项目"):
+            create_page = CreateRFPProjectPage(page_module)
+            await create_page.navigate_to_create_project()
+            await create_page.select_contracting_agency(VOID_PROJECT_DATA["agency_name"])
+            await create_page.fill_project_name(project_name)
+            await create_page.fill_contact_person(VOID_PROJECT_DATA["contact_person"])
+            await create_page.fill_contact_phone(VOID_PROJECT_DATA["contact_phone"])
+            await create_page.select_invitation_sign_method()
+            await create_page.select_registration_date(VOID_PROJECT_DATA["start_day"], VOID_PROJECT_DATA["end_day"])
+            await create_page.select_first_round_date(VOID_PROJECT_DATA["start_day"], VOID_PROJECT_DATA["end_day"])
+            await create_page.select_agreement_date(VOID_PROJECT_DATA["start_day"], VOID_PROJECT_DATA["end_day"])
+            await create_page.fill_expected_hotel_count(VOID_PROJECT_DATA["expected_hotel_count"])
+            await create_page.fill_min_diff_std(VOID_PROJECT_DATA["min_diff_std"])
+            await create_page.fill_max_diff_std(VOID_PROJECT_DATA["max_diff_std"])
+            await create_page.click_save_and_next()
+            toast_text = await create_page.verify_save_success()
+            assert toast_text, "项目创建后未检测到成功提示"
+            logger.info(f"项目创建完成: {project_name}")
+
+        # ===== 阶段2: SIGN-LIST-019 作废项目 =====
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【阶段2-作废】进入签约列表并搜索项目"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【阶段2-作废】点击「作废」按钮"):
+            await contract_page.click_void_button_for_first_row()
+
+        with allure.step("【阶段2-作废】验证确认弹窗"):
+            dialog_ok = await contract_page.verify_confirm_dialog_visible(
+                contract_page.VOID_CONFIRM_MSG
+            )
+            assert dialog_ok, "作废确认弹窗未出现或内容不匹配"
+
+        with allure.step("【阶段2-作废】点击弹窗「确定」"):
+            await contract_page.click_confirm_in_dialog()
+
+        with allure.step("【阶段2-作废】验证作废成功提示"):
+            toast_ok = await contract_page.verify_success_toast(contract_page.VOID_SUCCESS_TEXT)
+            assert toast_ok, "未检测到作废成功提示"
+
+        with allure.step("【阶段2-作废】断言项目从列表消失"):
+            await contract_page.expect_project_disappeared(project_name)
+
+    @allure.title("验证作废项目-取消: {case_data[description]}")
+    @allure.description("""
+    测试 SIGN-LIST-020：点击作废后在弹窗中取消，项目保持不变。
+
+    测试流程:
+    1. 进入签约列表，搜索指定项目
+    2. 点击「作废」，验证弹窗出现
+    3. 点击「取消」，验证弹窗关闭
+    4. 验证项目仍在列表中
+    """)
+    @pytest.mark.parametrize("case_data", [VOID_CANCEL_DATA])
+    @pytest.mark.asyncio
+    async def test_void_project_cancel(self, page_module, operate_user, case_data):
+        """SIGN-LIST-020: 作废项目-取消"""
+        project_name = case_data["project_name"]
+        logger.info(f"Starting SIGN-LIST-020 作废取消测试, 项目={project_name}")
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约列表并搜索项目"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【步骤 2】确认项目存在于列表中"):
+            found = await contract_page.verify_project_in_list(project_name)
+            assert found, f"未找到目标项目: {project_name}"
+
+        with allure.step("【步骤 3】点击「作废」按钮"):
+            await contract_page.click_void_button_for_first_row()
+
+        with allure.step("【步骤 4】验证作废确认弹窗"):
+            dialog_ok = await contract_page.verify_confirm_dialog_visible(
+                contract_page.VOID_CONFIRM_MSG
+            )
+            assert dialog_ok, "作废确认弹窗未出现或内容不匹配"
+
+        with allure.step("【步骤 5】点击弹窗「取消」"):
+            await contract_page.click_cancel_in_dialog()
+
+        with allure.step("【步骤 6】验证弹窗已关闭"):
+            dialog_gone = await contract_page.verify_confirm_dialog_disappeared()
+            assert dialog_gone, "弹窗未关闭"
+
+        with allure.step("【步骤 7】验证项目仍在列表中"):
+            found = await contract_page.verify_project_in_list(project_name)
+            assert found, f"取消作废后项目消失: {project_name}"

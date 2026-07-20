@@ -26,11 +26,17 @@ class HotelBiddingPage(BasePage):
     HOTEL_NAME_SEARCH_ROLE = "酒店名称"
     SEARCH_BUTTON_SELECTOR = ".c-icon-search"
 
+    # ========== Tab ==========
+    NEGOTIATING_TAB_PATTERN = r"^议价中"
+
     # ========== 操作按钮 ==========
     MODIFY_QUOTE_TEXT = "修改报价"
     CLOSE_TEXT = "关闭"
     SUBMIT_QUOTE_TEXT = "提交报价"
+    SUBMIT_QUOTE_BUTTON_SELECTOR = "div.c-button.ml-20.bg-primary"
     CONFIRM_TEXT = "确定"
+    CONFIRM_DIALOG_BUTTON_SELECTOR = "div.c-asm.c-button.bg-white"
+    WINNING_CONFIRM_BTN_SELECTOR = "button.winning-confirm-btn--primary"
     SUCCESS_TOAST_TEXT = "操作成功"
 
     def __init__(self, page: Page):
@@ -76,7 +82,7 @@ class HotelBiddingPage(BasePage):
         with allure.step("点击议价中Tab"):
             try:
                 tab = self.page.locator("div").filter(
-                    has_text=re.compile(r"^议价中")
+                    has_text=re.compile(self.NEGOTIATING_TAB_PATTERN)
                 ).first
                 await tab.wait_for(timeout=timeout_config.get_element_timeout())
                 await tab.click()
@@ -149,15 +155,14 @@ class HotelBiddingPage(BasePage):
                 self.logger.info("备注留言弹窗未出现，跳过关闭")
 
     async def click_submit_quote(self) -> None:
-        """点击顶部提交报价按钮（div.c-button.ml-20.bg-primary:has-text('提交报价')）"""
+        """点击顶部提交报价按钮"""
         self.logger.info("点击提交报价")
         with allure.step("点击提交报价"):
             try:
-                await self.page.wait_for_timeout(1000)
-                # 顶部按钮有 ml-20 class，底部按钮在 .c-division 内、无 ml-20
-                btn = self.page.locator(
-                    'div.c-button.ml-20.bg-primary:has-text("提交报价")'
-                )
+                await self.page.wait_for_timeout(3000)
+                btn = self.page.locator(self.SUBMIT_QUOTE_BUTTON_SELECTOR).filter(
+                    has_text=self.SUBMIT_QUOTE_TEXT
+                ).first
                 await btn.wait_for(timeout=timeout_config.get_element_timeout())
                 await btn.click()
                 await self.page.wait_for_timeout(500)
@@ -174,11 +179,11 @@ class HotelBiddingPage(BasePage):
         with allure.step("二次确认弹窗 - 点击确定"):
             try:
                 # 优先匹配通用确认弹窗，否则匹配中签弹窗
-                confirm_btn = self.page.locator("div.c-asm.c-button.bg-white").filter(
+                confirm_btn = self.page.locator(self.CONFIRM_DIALOG_BUTTON_SELECTOR).filter(
                     has_text=self.CONFIRM_TEXT
                 ).first
                 if not await confirm_btn.count():
-                    confirm_btn = self.page.locator("button.winning-confirm-btn--primary")
+                    confirm_btn = self.page.locator(self.WINNING_CONFIRM_BTN_SELECTOR)
                 await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
                 await confirm_btn.click()
                 await self.page.wait_for_timeout(500)

@@ -448,6 +448,9 @@ class TestRFPContractList:
         with allure.step("【步骤 2】切换到「已启动」Tab"):
             await contract_list_page.click_started_tab()
 
+        with allure.step("【步骤 2.5】重置筛选条件，确保列表数据完整"):
+            await contract_list_page.reset_filter()
+
         with allure.step("【步骤 3】验证分页控件可见"):
             pagination_visible = await contract_list_page.verify_pagination_visible()
             assert pagination_visible, "分页控件不可见"

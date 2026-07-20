@@ -25,7 +25,7 @@ class EditRFPProjectPage(BasePage):
     NOT_STARTED_TAB_NAME = "^未启动$"
     STARTED_TAB_NAME = "^已启动$"
     PROJECT_SEARCH_LABEL_TEXT = "签约项目"
-    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
+    SEARCH_BUTTON_SELECTOR = ".c-icon-search"
 
     # ========== 项目操作按钮 ==========
     START_BUTTON_TEXT = "启动"
@@ -81,6 +81,10 @@ class EditRFPProjectPage(BasePage):
 
         with allure.step("导航至签约管理 > 签约页面"):
             try:
+                try:
+                    await self.page.reload()
+                except Exception:
+                    pass
                 # Step 1: 点击 签约管理 菜单
                 self.logger.debug(f"点击 {self.RFP_MANAGEMENT_MENU_TEXT} 菜单")
                 rfp_menu = self.page.get_by_text(self.RFP_MANAGEMENT_MENU_TEXT)

@@ -12,16 +12,19 @@ from utils.oracle_db import get_normal_hotels, get_group_hotels
 from utils.excel_utils import verify_exported_hotel_excel
 from utils.test_data_loader import TestDataLoader
 
+EDIT_PROJECT_TABS_DATA = TestDataLoader.load_params(
+    "rfp_management_params.json",
+    "edit_project_tabs",
+)
+
 
 @allure.feature("RFP 项目管理")
 @allure.story("RFP 项目编辑 - Tab 保存功能")
 class TestEditRFPProjectTabs:
     """RFP 项目编辑页面 Tab 保存功能测试类"""
 
-    # 固定的项目名称（需在系统中存在）
-    TEST_PROJECT_NAME = "hy-自动化项目-未完成项"
-
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_data", EDIT_PROJECT_TABS_DATA)
     @allure.title("验证 RFP 项目编辑页面中所有 Tab 的保存功能")
     @allure.description("""
     测试: Operate 角色在签约管理的签约页面中，对 未启动 状态的项目进行修改，
@@ -30,7 +33,7 @@ class TestEditRFPProjectTabs:
     测试流程:
     1. 导航至签约管理 > 签约页面
     2. 选择 未启动 Tab
-    3. 按签约项目标签搜索项目: hy-自动化项目-未完成项
+    3. 按签约项目标签搜索项目
     4. 按 Enter 搜索，点击第一个匹配项的修改项目按钮
     5. 在编辑页面中遍历所有 Tab:
        - 对有保存按钮的 Tab: 点击保存 → 验证 toast 成功提示
@@ -41,14 +44,16 @@ class TestEditRFPProjectTabs:
     - 所有有保存按钮的 Tab 保存成功，显示成功 toast 提示
     - 所有无保存按钮的 Tab 正常跳过处理
     """)
-    async def test_edit_rfp_project_all_tabs_save(self, page_module, operate_user):
+    async def test_edit_rfp_project_all_tabs_save(self, page_module, operate_user, test_data):
         """
         完整的 RFP 项目编辑页面 Tab 保存功能测试
 
         Args:
             page_module: Module 级 page 对象 - 复用登录状态
             operate_user: Operate 角色登录 fixture
+            test_data: 参数化测试数据 {project_name}
         """
+        project_name = test_data["project_name"]
         # 初始化 POM 类
         edit_page = EditRFPProjectPage(page_module)
 
@@ -58,8 +63,8 @@ class TestEditRFPProjectTabs:
         with allure.step("【步骤 2】选择 未启动 Tab"):
             await edit_page.click_not_started_tab()
 
-        with allure.step(f"【步骤 3】搜索项目: {self.TEST_PROJECT_NAME}"):
-            await edit_page.search_and_open_project(self.TEST_PROJECT_NAME)
+        with allure.step(f"【步骤 3】搜索项目: {project_name}"):
+            await edit_page.search_and_open_project(project_name)
 
         with allure.step("【步骤 4】遍历所有 Tab 进行保存功能测试"):
             test_results = await edit_page.test_all_tabs_save_functionality()
@@ -91,7 +96,7 @@ class TestEditRFPProjectTabs:
         [OK] RFP 项目编辑页面 Tab 保存功能测试完成
 
         【测试项目】
-        - 项目名称: {self.TEST_PROJECT_NAME}
+        - 项目名称: {project_name}
 
         【测试统计】
         - 总 Tab 数: {test_results['total_tabs']}
@@ -112,6 +117,7 @@ class TestEditRFPProjectTabs:
         allure.attach(final_report, "完整测试报告", allure.attachment_type.TEXT)
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("test_data", EDIT_PROJECT_TABS_DATA)
     @allure.title("验证未启动项目的启动按钮和确认弹窗")
     @allure.description("""
     测试: Operate 角色在签约管理的签约页面中，查看未启动项目的启动按钮和确认弹窗。
@@ -119,7 +125,7 @@ class TestEditRFPProjectTabs:
     测试流程:
     1. 导航至签约管理 > 签约页面
     2. 选择未启动 Tab
-    3. 搜索项目: hy-自动化项目-未完成项
+    3. 搜索项目
     4. 点击该项目的 启动 按钮
     5. 验证 确定 确认按钮出现（不点击确定，只验证出现）
     6. 点击取消关闭弹窗
@@ -128,14 +134,16 @@ class TestEditRFPProjectTabs:
     - 能够找到项目的 启动 按钮
     - 点击 启动 后出现 确定 确认按钮的弹窗
     """)
-    async def test_verify_start_project_confirmation_popup(self, page_module, operate_user):
+    async def test_verify_start_project_confirmation_popup(self, page_module, operate_user, test_data):
         """
         验证未启动项目的启动按钮和确认弹窗
 
         Args:
             page_module: Module 级 page 对象 - 复用登录状态
             operate_user: Operate 角色登录 fixture
+            test_data: 参数化测试数据 {project_name}
         """
+        project_name = test_data["project_name"]
         # 初始化 POM 类
         edit_page = EditRFPProjectPage(page_module)
 
@@ -145,8 +153,8 @@ class TestEditRFPProjectTabs:
         with allure.step("【步骤 2】选择 未启动 Tab"):
             await edit_page.click_not_started_tab()
 
-        with allure.step(f"【步骤 3】搜索项目: {self.TEST_PROJECT_NAME}"):
-            await edit_page.search_project_by_keyword(self.TEST_PROJECT_NAME)
+        with allure.step(f"【步骤 3】搜索项目: {project_name}"):
+            await edit_page.search_project_by_keyword(project_name)
 
         with allure.step("【步骤 4】点击 启动 按钮"):
             await edit_page.click_start_button()
@@ -163,7 +171,7 @@ class TestEditRFPProjectTabs:
         [OK] 未启动项目 启动 按钮验证测试完成
 
         【测试项目】
-        - 项目名称: {self.TEST_PROJECT_NAME}
+        - 项目名称: {project_name}
 
         【测试结果】
         - 启动按钮: 已找到并点击

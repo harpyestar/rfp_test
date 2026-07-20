@@ -17,7 +17,7 @@ class HotelGroupDiscountPricePage(BasePage):
     PROJECT_INPUT_CONTAINER_SELECTOR = "label.c-input"
     PROJECT_INPUT_TITLE_TEXT = "项目"
     PROJECT_INPUT_SELECTOR = 'input[placeholder="请输入..."][type="text"]'
-    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
+    SEARCH_BUTTON_SELECTOR = ".c-icon-search"
     GROUP_DISCOUNT_BUTTON_TEXT = "集团折扣"
     EXPIRED_TOAST_TEXT = "项目签约时间已经结束"
 
@@ -27,11 +27,7 @@ class HotelGroupDiscountPricePage(BasePage):
     async def navigate_to_home(self) -> None:
         home_url = config.base_url.rstrip("/") + self.HOME_PATH
         self.logger.info(f"正在导航到酒店集团首页: {home_url}")
-        await self.page.goto(
-            home_url,
-            wait_until="domcontentloaded",
-            timeout=timeout_config.get_navigation_timeout(),
-        )
+        await self.goto(home_url, timeout=timeout_config.get_navigation_timeout())
         await self.wait_helper.wait_for_load_state(
             self.page,
             state="domcontentloaded",

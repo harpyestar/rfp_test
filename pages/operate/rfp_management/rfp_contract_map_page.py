@@ -25,7 +25,7 @@ class RFPContractMapPage(BasePage):
 
     # ========== 搜索 ==========
     PROJECT_SEARCH_LABEL_TEXT = "签约项目"
-    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
+    SEARCH_BUTTON_SELECTOR = ".c-icon-search"
     GO_CONTRACTING_BUTTON_TEXT = "去签约"
 
     # ========== 视图模式切换 ==========
@@ -55,6 +55,7 @@ class RFPContractMapPage(BasePage):
 
     # ========== 通用按钮 ==========
     CONFIRM_BUTTON_TEXT = "确定"
+    WINNING_CONFIRM_BTN_SELECTOR = "button.winning-confirm-btn--primary"
 
     # ========== URL 验证关键字 ==========
     BID_EVALUATION_KEYWORD = "intelligentSigning"
@@ -74,7 +75,7 @@ class RFPContractMapPage(BasePage):
         with allure.step("进入 /home 页面"):
             try:
                 home_url = f"{config.base_url.rstrip('/')}{self.HOME_PATH}"
-                await self.page.goto(home_url, wait_until="domcontentloaded")
+                await self.goto(home_url)
                 await self.wait_helper.wait_for_url(
                     self.page,
                     "**/home*",
@@ -93,6 +94,10 @@ class RFPContractMapPage(BasePage):
 
         with allure.step("通过菜单进入签约页面"):
             try:
+                try:
+                    await self.page.reload()
+                except Exception:
+                    pass
                 contract_management_menu = self.page.get_by_text(
                     self.CONTRACT_MANAGEMENT_MENU_TEXT, exact=True
                 )
@@ -326,9 +331,8 @@ class RFPContractMapPage(BasePage):
 
         with allure.step("点击继续议价按钮"):
             try:
-                # 使用 XPath 精确定位
-                btn = self.page.locator(
-                    f"//div[@class='btn-tr main mr-16' and text()='{self.CONTINUE_NEGOTIATION_BUTTON_TEXT}']"
+                btn = self.page.get_by_text(
+                    self.CONTINUE_NEGOTIATION_BUTTON_TEXT, exact=True
                 )
                 await btn.wait_for(timeout=timeout_config.get_element_timeout())
                 await btn.click()
@@ -346,9 +350,8 @@ class RFPContractMapPage(BasePage):
 
         with allure.step("点击中签按钮"):
             try:
-                # 中签按钮可能有前导空格，使用 contains 匹配
-                btn = self.page.locator(
-                    f"//div[@class='btn-tr main mr-16' and contains(text(), '{self.SIGNED_BUTTON_TEXT}')]"
+                btn = self.page.get_by_text(
+                    self.SIGNED_BUTTON_TEXT, exact=True
                 )
                 await btn.wait_for(timeout=timeout_config.get_element_timeout())
                 await btn.click()
@@ -459,14 +462,20 @@ class RFPContractMapPage(BasePage):
     # ======================================================================
 
     async def click_confirm(self) -> None:
-        """点击确定按钮"""
+        """点击确定按钮（兼容中签/继续议价/否决三种弹窗）"""
         self.logger.info("点击确定按钮")
 
         with allure.step("点击确定按钮"):
             try:
-                confirm_btn = self.page.get_by_text(
-                    self.CONFIRM_BUTTON_TEXT, exact=True
-                )
+                # 中签弹窗的确定按钮是 button.winning-confirm-btn--primary
+                # 继续议价/否决弹窗的确定按钮直接通过文本定位
+                winning_btn = self.page.locator(self.WINNING_CONFIRM_BTN_SELECTOR)
+                if await winning_btn.count():
+                    confirm_btn = winning_btn
+                else:
+                    confirm_btn = self.page.get_by_text(
+                        self.CONFIRM_BUTTON_TEXT, exact=True
+                    )
                 await confirm_btn.wait_for(
                     timeout=timeout_config.get_element_timeout()
                 )

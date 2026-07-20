@@ -24,7 +24,7 @@ class RFPDetailPageProject(BasePage):
     AWARDED_TAB_PATTERN = r"^已中签$"
 
     PROJECT_SEARCH_LABEL_TEXT = "签约项目"
-    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
+    SEARCH_BUTTON_SELECTOR = ".c-icon-search"
     GO_CONTRACTING_BUTTON_TEXT = "去签约"
 
     HOTEL_LIST_SELECTOR = ".hotel-list .item"
@@ -43,6 +43,7 @@ class RFPDetailPageProject(BasePage):
     REJECTED_BUTTON_TEXT = "否决报价"
     MESSAGE_BOARD_SELECTOR = "//div[@class='w-100p c-asm']//textarea"
     CONFIRM_ACTION_BUTTON_SELECTOR = "div.c-asm.c-button.bg-white.flex-center.size-sm.color-primary.r-sm"
+    WINNING_CONFIRM_BTN_SELECTOR = "button.winning-confirm-btn--primary"
 
     def __init__(self, page: Page):
         super().__init__(page)
@@ -55,7 +56,7 @@ class RFPDetailPageProject(BasePage):
         with allure.step("进入 /home 页面"):
             try:
                 home_url = f"{config.base_url.rstrip('/')}{self.HOME_PATH}"
-                await self.page.goto(home_url, wait_until="domcontentloaded")
+                await self.goto(home_url)
                 await self.wait_helper.wait_for_url(
                     self.page,
                     "**/home*",
@@ -74,6 +75,10 @@ class RFPDetailPageProject(BasePage):
 
         with allure.step("通过菜单进入签约页面"):
             try:
+                try:
+                    await self.page.reload()
+                except Exception:
+                    pass
                 contract_management_menu = self.page.get_by_text(
                     self.CONTRACT_MANAGEMENT_MENU_TEXT,
                     exact=True,
@@ -418,14 +423,18 @@ class RFPDetailPageProject(BasePage):
                 raise
 
     async def click_action_confirm(self) -> None:
-        """点击操作确认对话框中的确定按钮"""
+        """点击操作确认对话框中的确定按钮（兼容中签/继续议价/否决三种弹窗）"""
         self.logger.info("点击确定按钮")
 
         with allure.step("点击确定按钮"):
             try:
-                confirm_btn = self.page.locator(
-                    self.CONFIRM_ACTION_BUTTON_SELECTOR
-                )
+                # 中签弹窗的确定按钮是 button.winning-confirm-btn--primary
+                # 继续议价/否决弹窗的确定按钮是 div.c-asm.c-button...
+                winning_btn = self.page.locator(self.WINNING_CONFIRM_BTN_SELECTOR)
+                if await winning_btn.count():
+                    confirm_btn = winning_btn
+                else:
+                    confirm_btn = self.page.locator(self.CONFIRM_ACTION_BUTTON_SELECTOR)
                 await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
                 await confirm_btn.click()
                 await self.page.wait_for_timeout(500)

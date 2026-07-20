@@ -84,6 +84,10 @@ class CreateRFPProjectPage(BasePage):
 
         with allure.step("导航至 签约管理 > 发布项目"):
             try:
+                try:
+                    await self.page.reload()
+                except Exception:
+                    pass
                 self.logger.debug("点击 签约管理 菜单")
                 rfp_menu = self.page.get_by_text(self.RFP_MANAGEMENT_MENU_TEXT, exact=True)
                 await rfp_menu.wait_for(timeout=timeout_config.get_element_timeout())
@@ -91,7 +95,7 @@ class CreateRFPProjectPage(BasePage):
                 await self.page.wait_for_timeout(300)
 
                 self.logger.debug(f"点击 {self.CREATE_PROJECT_DROPDOWN_TEXT} 选项")
-                create_option = self.page.get_by_text(self.CREATE_PROJECT_DROPDOWN_TEXT, exact=True)
+                create_option = self.page.get_by_text(self.CREATE_PROJECT_DROPDOWN_TEXT, exact=True).first
                 await create_option.wait_for(timeout=timeout_config.get_element_timeout())
                 await create_option.click()
 
@@ -344,6 +348,10 @@ class CreateRFPProjectPage(BasePage):
 
         with allure.step("导航至 签约管理 > 签约"):
             try:
+                try:
+                    await self.page.reload()
+                except Exception:
+                    pass
                 contracting_option = self.page.get_by_text(self.CONTRACTING_MENU_TEXT, exact=True)
 
                 # 先检查子菜单是否已可见，避免重击父级导致折叠

@@ -176,6 +176,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约项目列表页"):
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step(f"【步骤 2】按机构名筛选: {case_data['org_name']}"):
             await contract_list_page.search_by_org_name(case_data["org_name"])
@@ -203,6 +204,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约项目列表页"):
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step(f"【步骤 2】按签约项目名称筛选: {case_data['project_name']}"):
             await contract_list_page.search_by_project_name(case_data["project_name"])
@@ -230,6 +232,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约项目列表页"):
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step(f"【步骤 2】按创建人筛选: {case_data['creator_name']}"):
             await contract_list_page.search_by_creator(case_data["creator_name"])
@@ -258,7 +261,10 @@ class TestRFPContractList:
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
 
-        with allure.step(f"【步骤 2】组合筛选: 机构={case_data['org_name']}, 项目={case_data['project_name']}, 创建人={case_data['creator_name']}"):
+        with allure.step("【步骤 2】选择未启动 Tab"):
+            await contract_list_page.click_unstarted_tab()
+
+        with allure.step(f"【步骤 3】组合筛选: 机构={case_data['org_name']}, 项目={case_data['project_name']}, 创建人={case_data['creator_name']}"):
             await contract_list_page.combined_search(
                 case_data["org_name"],
                 case_data["project_name"],
@@ -288,6 +294,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约项目列表页"):
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step(f"【步骤 2】搜索不存在的项目: {case_data['project_name']}"):
             await contract_list_page.search_by_project_name(case_data["project_name"])
@@ -316,6 +323,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约项目列表页"):
             await contract_list_page.navigate_to_home()
             await contract_list_page.navigate_to_contracting()
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step(f"【步骤 2】按签约项目名称筛选: {case_data['project_name']}"):
             await contract_list_page.search_by_project_name(case_data["project_name"])
@@ -363,6 +371,9 @@ class TestRFPContractList:
             ).first
             await unstarted_tab.wait_for(timeout=timeout_config.get_element_timeout())
             assert await unstarted_tab.is_visible(), "未启动Tab不可见"
+
+        with allure.step("【步骤 2.5】点击「未启动」Tab"):
+            await contract_list_page.click_unstarted_tab()
 
         with allure.step("【步骤 3】逐一核对列表字段列名称"):
             columns_ok = await contract_list_page.verify_unstarted_list_columns()
@@ -500,6 +511,7 @@ class TestRFPContractList:
         with allure.step("【阶段2-启动】进入签约列表并搜索项目"):
             await contract_page.navigate_to_home()
             await contract_page.navigate_to_contracting()
+            await contract_page.click_unstarted_tab()
             await contract_page.search_by_project_name(project_name)
 
         with allure.step("【阶段2-启动】点击「启动」按钮"):
@@ -539,7 +551,7 @@ class TestRFPContractList:
             toast_ok = await contract_page.verify_success_toast(contract_page.STOP_SUCCESS_TEXT)
             assert toast_ok, "未检测到终止成功提示"
 
-    @allure.title("验证作废项目-确认")
+    @allure.title(" ")
     @allure.description("""
     测试 SIGN-LIST-019：创建项目 → 未启动Tab下作废项目。
 
@@ -580,6 +592,7 @@ class TestRFPContractList:
         with allure.step("【阶段2-作废】进入签约列表并搜索项目"):
             await contract_page.navigate_to_home()
             await contract_page.navigate_to_contracting()
+            await contract_page.click_unstarted_tab()
             await contract_page.search_by_project_name(project_name)
 
         with allure.step("【阶段2-作废】点击「作废」按钮"):
@@ -622,6 +635,7 @@ class TestRFPContractList:
         with allure.step("【步骤 1】进入签约列表并搜索项目"):
             await contract_page.navigate_to_home()
             await contract_page.navigate_to_contracting()
+            await contract_page.click_unstarted_tab()
             await contract_page.search_by_project_name(project_name)
 
         with allure.step("【步骤 2】确认项目存在于列表中"):

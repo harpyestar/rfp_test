@@ -368,14 +368,14 @@
     {
       "case_id": "contract_filter_004",
       "description": "按创建人筛选",
-      "creator_name": "郑尧辉"
+      "creator_name": "zwl-PT"
     },
     {
       "case_id": "contract_filter_005",
       "description": "组合筛选",
       "org_name": "测试机构hy",
       "project_name": "hy-自动化项目-未完成项",
-      "creator_name": "郑尧辉"
+      "creator_name": "zwl-PT"
     },
     {
       "case_id": "contract_filter_006",
@@ -386,6 +386,13 @@
       "case_id": "contract_filter_007",
       "description": "重置筛选条件",
       "project_name": "自动化测试项目-固定未启动列"
+    }
+  ],
+  "edit_project_tabs": [
+    {
+      "case_id": "edit_tab_001",
+      "description": "遍历所有Tab保存+启动确认弹窗",
+      "project_name": "hy-自动化项目-未完成项"
     }
   ]
 }

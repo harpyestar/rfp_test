@@ -20,10 +20,16 @@ class BasePage:
         self.logger = get_logger(self.__class__.__name__, config.log_level)
         self.wait_helper = WaitHelper()
 
-    async def goto(self, url: str) -> None:
+    async def goto(self, url: str, timeout: Optional[float] = None) -> None:
         self.logger.info(f"Navigating to {url}")
-        # 使用 domcontentloaded 替代 networkidle，减少卡顿风险
-        await self.page.goto(url, wait_until="domcontentloaded")
+        try:
+            await self.page.reload()
+        except Exception:
+            pass
+        goto_kwargs: dict = {"wait_until": "domcontentloaded"}
+        if timeout is not None:
+            goto_kwargs["timeout"] = timeout
+        await self.page.goto(url, **goto_kwargs)
         # 仅在必要时等待网络空闲（可选，用于后续交互）
         try:
             await self.wait_helper.wait_for_load_state(

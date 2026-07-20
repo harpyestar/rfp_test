@@ -60,7 +60,8 @@ class RFPContractListPage(BasePage):
     PROJECT_NAME_LABEL_TEXT = "签约项目"
     CREATOR_LABEL_TEXT = "创建人"
 
-    SEARCH_BUTTON_SELECTOR = ".ml-15 > div"
+    SEARCH_BUTTON_SELECTOR = ".c-icon-search"
+    RESET_BUTTON_SELECTOR = ".c-icon-refresh"
 
     NEXT_PAGE_BUTTON_SELECTOR = ".c-icon-right-arrow"
     PREV_PAGE_BUTTON_SELECTOR = ".c-icon-left-arrow"
@@ -96,11 +97,7 @@ class RFPContractListPage(BasePage):
         """进入 /home 页面"""
         self.logger.info("开始进入 /home 页面")
         home_url = f"{config.base_url.rstrip('/')}{self.HOME_PATH}"
-        await self.page.goto(
-            home_url,
-            wait_until="domcontentloaded",
-            timeout=timeout_config.get_navigation_timeout(),
-        )
+        await self.goto(home_url, timeout=timeout_config.get_navigation_timeout())
         await self.wait_helper.wait_for_url(
             self.page,
             "**/home*",
@@ -115,6 +112,10 @@ class RFPContractListPage(BasePage):
             self.CONTRACTING_MENU_TEXT, exact=True
         ).last
         try:
+            try:
+                await self.page.reload()
+            except Exception:
+                pass
             await contracting_menu.wait_for(timeout=500)
             if await contracting_menu.is_visible():
                 self.logger.info("'签约'子菜单已可见，直接点击")
@@ -282,6 +283,15 @@ class RFPContractListPage(BasePage):
         await self.page.wait_for_load_state("networkidle")
         self.logger.info("[OK] 已点击'已启动' Tab")
 
+    async def click_unstarted_tab(self) -> None:
+        """点击「未启动」Tab"""
+        self.logger.info("点击'未启动' Tab")
+        unstarted_tab = self.page.get_by_text(self.UNSTARTED_TAB_TEXT, exact=True).first
+        await unstarted_tab.wait_for(timeout=timeout_config.get_element_timeout())
+        await unstarted_tab.click()
+        await self.page.wait_for_load_state("networkidle")
+        self.logger.info("[OK] 已点击'未启动' Tab")
+
     def _filter_input_by_label(self, label_text: str):
         """通过 label 文本定位对应筛选输入框"""
         return (
@@ -358,7 +368,7 @@ class RFPContractListPage(BasePage):
     async def reset_filter(self) -> None:
         """点击「重置」按钮，重置所有筛选条件"""
         self.logger.info("点击'重置'按钮")
-        reset_btn = self.page.locator(self.SEARCH_BUTTON_SELECTOR).nth(1)
+        reset_btn = self.page.locator(self.RESET_BUTTON_SELECTOR)
         await reset_btn.wait_for(timeout=timeout_config.get_element_timeout())
         await reset_btn.click()
         await self.page.wait_for_load_state("networkidle")
@@ -396,7 +406,7 @@ class RFPContractListPage(BasePage):
 
     def _pagination_area(self):
         """定位分页控件区域"""
-        return self.page.locator(".c-pagination, .el-pagination, .pagination").first
+        return self.page.locator(".c-pagination")
 
     def _next_page_button(self):
         """定位下一页按钮"""

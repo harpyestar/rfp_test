@@ -27,6 +27,7 @@ with open(config.PROJECT_ROOT / "data" / "test_cases" / "rfp_management_params.j
     START_STOP_PROJECT_DATA = _START_STOP_ALL[0]
     VOID_PROJECT_DATA = _START_STOP_ALL[1]
     VOID_CANCEL_DATA = _ALL_PARAMS["void_cancel_project"][0]
+    STOP_WITH_BIDS_DATA = _ALL_PARAMS["stop_project_with_bids"][0]
 
 
 def generate_project_name(prefix: str) -> str:
@@ -553,6 +554,56 @@ class TestRFPContractList:
         with allure.step("【阶段3-终止】验证终止成功提示"):
             toast_ok = await contract_page.verify_success_toast(contract_page.STOP_SUCCESS_TEXT)
             assert toast_ok, "未检测到终止成功提示"
+
+    @allure.title("验证终止项目-有报价酒店被拦截")
+    @allure.description("""
+    SIGN-LIST-024: 终止项目-有报价酒店(终止)
+
+    测试: 在已启动Tab下，对 bidHotelCount>0 的项目执行终止操作，
+    系统应拦截并提示"请先处理完新标及议价状态的报价才能终止签约"。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 切换到「已启动」Tab
+    3. 搜索目标项目（有报价酒店的项目）
+    4. 点击「终止」按钮 → 弹出确认弹窗
+    5. 点击弹窗「确认」
+    6. 验证拦截提示：请先处理完新标及议价状态的报价才能终止签约
+    """)
+    @pytest.mark.asyncio
+    async def test_stop_project_with_bids(self, page_module, operate_user):
+        """SIGN-LIST-024: 终止项目-有报价酒店(终止)"""
+        project_name = STOP_WITH_BIDS_DATA["project_name"]
+        logger.info(f"Starting SIGN-LIST-024 终止有报价酒店项目, 项目={project_name}")
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】切换到「已启动」Tab"):
+            await contract_page.click_started_tab()
+
+        with allure.step(f"【步骤 3】搜索项目: {project_name}"):
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【步骤 4】点击「终止」按钮"):
+            await contract_page.click_stop_button_for_first_row()
+
+        with allure.step("【步骤 5】验证拦截弹窗"):
+            dialog_ok = await contract_page.verify_confirm_dialog_visible(
+                contract_page.STOP_BLOCK_MSG
+            )
+            assert dialog_ok, "拦截弹窗未出现或内容不匹配"
+
+        with allure.step("【步骤 6】点击弹窗「确定」关闭"):
+            await contract_page.click_confirm_in_dialog()
+
+        with allure.step("【步骤 7】验证项目未被终止——仍在列表中"):
+            logger.info("刷新列表确认项目未被终止")
+            await contract_page.search_by_project_name(project_name)
+            found = await contract_page.verify_project_in_list(project_name)
+            assert found, f"项目 {project_name} 被终止了，拦截未生效"
 
     @allure.title(" ")
     @allure.description("""

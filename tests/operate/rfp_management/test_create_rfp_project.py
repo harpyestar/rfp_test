@@ -122,17 +122,20 @@ class TestCreateRFPProject:
             ), f"Toast 内容不包含成功关键词，实际内容: {toast_text}"
 
         # ========== Step 15-18: 清理 - 作废项目 ==========
-        with allure.step("【步骤 15】导航至签约管理页面"):
-            await create_page.navigate_to_contracting()
+        if project_data.get("cleanup", True):
+            with allure.step("【步骤 15】导航至签约管理页面"):
+                await create_page.navigate_to_contracting()
 
-        with allure.step("【步骤 16】选择未启动 Tab"):
-            await create_page.click_not_started_tab()
+            with allure.step("【步骤 16】选择未启动 Tab"):
+                await create_page.click_not_started_tab()
 
-        with allure.step(f"【步骤 17】搜索刚创建的项目: {project_name}"):
-            await create_page.search_project_by_name(project_name)
+            with allure.step(f"【步骤 17】搜索刚创建的项目: {project_name}"):
+                await create_page.search_project_by_name(project_name)
 
-        with allure.step("【步骤 18】作废项目（清理数据）"):
-            await create_page.void_first_project()
+            with allure.step("【步骤 18】作废项目（清理数据）"):
+                await create_page.void_first_project()
+        else:
+            allure.attach("cleanup=false，跳过作废", "清理策略")
 
         # 测试报告
         report = f"""

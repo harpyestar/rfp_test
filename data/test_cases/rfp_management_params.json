@@ -11,7 +11,8 @@
       "end_day": 28,
       "expected_hotel_count": "100",
       "min_diff_std": "100",
-      "max_diff_std": "500"
+      "max_diff_std": "500",
+      "cleanup": true
     }
   ],
   "start_and_stop_project": [
@@ -47,6 +48,13 @@
       "case_id": "void_cancel_001",
       "description": "作废项目-取消",
       "project_name": "自动化测试项目-固定未启动列"
+    }
+  ],
+  "stop_project_with_bids": [
+    {
+      "case_id": "stop_bids_001",
+      "description": "终止项目-有报价酒店",
+      "project_name": "自动化测试项目-测试能否终止"
     }
   ],
   "rfp_contracting_map": [

@@ -44,13 +44,14 @@ class RFPContractListPage(BasePage):
         PERFORMANCE_BUTTON_TEXT,
     ]
 
-    C_DIALOG_SELECTOR = ".c-confirmer"
+    C_DIALOG_SELECTOR = ".c-view.c-confirmer-message"
     CONFIRM_BUTTON_TEXT = "确定"
     CANCEL_BUTTON_TEXT = "取消"
     DIALOG_TITLE_TEXT = "提示"
     START_CONFIRM_MSG = "确定要启动么？"
     START_SUCCESS_TEXT = "操作成功!"
     STOP_CONFIRM_MSG = "确定要终止签约么？"
+    STOP_BLOCK_MSG = "目前项目里有酒店的报价请先处理完后才能终止"
     STOP_SUCCESS_TEXT = "操作成功!"
     VOID_CONFIRM_MSG = "确定要废标么？"
     VOID_SUCCESS_TEXT = "操作成功!"
@@ -65,6 +66,19 @@ class RFPContractListPage(BasePage):
 
     NEXT_PAGE_BUTTON_SELECTOR = ".c-icon-right-arrow"
     PREV_PAGE_BUTTON_SELECTOR = ".c-icon-left-arrow"
+    PAGINATION_ACTIVE_SELECTOR = ".c-pagination-button.selected"
+
+    TABLE_SELECTOR = ".c-table"
+    TABLE_ROW_SELECTOR = "table.c-table-body tbody tr.c-tr"
+
+    DROPDOWN_PANEL_SELECTOR = ".c-dropdown-panel"
+    DROPDOWN_OPTION_SELECTOR = ".c-select-option"
+
+    EMPTY_DATA_TEXT = "暂无数据"
+
+    HOME_URL_PATTERN = "**/home*"
+
+    CONFIRM_BUTTON_IN_DIALOG_SELECTOR = ".c-confirmer-button-container div.c-view"
 
     UNSTARTED_COLUMN_HEADERS = [
         "签约项目",
@@ -100,7 +114,7 @@ class RFPContractListPage(BasePage):
         await self.goto(home_url, timeout=timeout_config.get_navigation_timeout())
         await self.wait_helper.wait_for_url(
             self.page,
-            "**/home*",
+            self.HOME_URL_PATTERN,
             timeout=timeout_config.get_navigation_timeout(),
         )
         self.logger.info("[OK] 已进入 /home 页面")
@@ -169,7 +183,7 @@ class RFPContractListPage(BasePage):
     async def verify_unstarted_list_columns(self) -> bool:
         """验证未启动Tab列表字段列完整"""
         self.logger.info("验证未启动Tab列表字段列")
-        table_header = self.page.locator(".c-table").first
+        table_header = self.page.locator(self.TABLE_SELECTOR).first
         await table_header.wait_for(timeout=timeout_config.get_element_timeout())
         for col_name in self.UNSTARTED_COLUMN_HEADERS:
             col = table_header.get_by_text(col_name, exact=True).first
@@ -187,7 +201,7 @@ class RFPContractListPage(BasePage):
     async def verify_unstarted_first_row_has_data(self) -> bool:
         """验证未启动Tab列表第一行有数据（非空列表）"""
         self.logger.info("验证未启动Tab列表第一行有数据")
-        rows = self.page.locator("table.c-table-body tbody tr.c-tr")
+        rows = self.page.locator(self.TABLE_ROW_SELECTOR)
         count = await rows.count()
         if count == 0:
             self.logger.warning("列表为空，无数据行")
@@ -201,7 +215,7 @@ class RFPContractListPage(BasePage):
     async def verify_started_list_columns(self) -> bool:
         """验证已启动Tab列表字段列完整"""
         self.logger.info("验证已启动Tab列表字段列")
-        table_header = self.page.locator(".c-table").first
+        table_header = self.page.locator(self.TABLE_SELECTOR).first
         await table_header.wait_for(timeout=timeout_config.get_element_timeout())
         for col_name in self.STARTED_COLUMN_HEADERS:
             col = table_header.get_by_text(col_name, exact=True).first
@@ -234,7 +248,7 @@ class RFPContractListPage(BasePage):
     async def verify_started_first_row_has_data(self) -> bool:
         """验证已启动Tab列表第一行有数据（非空列表）"""
         self.logger.info("验证已启动Tab列表第一行有数据")
-        rows = self.page.locator("table.c-table-body tbody tr.c-tr")
+        rows = self.page.locator(self.TABLE_ROW_SELECTOR)
         count = await rows.count()
         if count == 0:
             self.logger.warning("列表为空，无数据行")
@@ -325,9 +339,9 @@ class RFPContractListPage(BasePage):
         await input_field.wait_for(timeout=timeout_config.get_element_timeout())
         await input_field.fill(org_name)
         await self.page.wait_for_timeout(500)
-        panel = self.page.locator(".c-dropdown-panel").last
+        panel = self.page.locator(self.DROPDOWN_PANEL_SELECTOR).last
         await panel.wait_for(timeout=timeout_config.get_element_timeout())
-        option = panel.locator(".c-select-option").filter(has_text=org_name).first
+        option = panel.locator(self.DROPDOWN_OPTION_SELECTOR).filter(has_text=org_name).first
         await option.wait_for(timeout=timeout_config.get_element_timeout())
         await option.click()
         self.logger.info(f"已选择机构名下拉选项: {org_name}")
@@ -428,7 +442,7 @@ class RFPContractListPage(BasePage):
 
     async def get_current_page_number(self) -> int:
         """获取当前激活的页码"""
-        active_page = self._pagination_area().locator(".c-pagination-button.selected").first
+        active_page = self._pagination_area().locator(self.PAGINATION_ACTIVE_SELECTOR).first
         try:
             text = await active_page.text_content()
             page_num = int(text.strip()) if text else 1
@@ -451,7 +465,7 @@ class RFPContractListPage(BasePage):
 
     async def get_page_row_count(self) -> int:
         """获取当前页列表行数"""
-        rows = self.page.locator("table.c-table-body tbody tr.c-tr")
+        rows = self.page.locator(self.TABLE_ROW_SELECTOR)
         count = await rows.count()
         self.logger.info(f"当前页列表行数: {count}")
         return count
@@ -460,13 +474,13 @@ class RFPContractListPage(BasePage):
         """验证列表为空（无数据或显示暂无数据）"""
         self.logger.info("验证列表是否为空")
         try:
-            empty_text = self.page.get_by_text("暂无数据").first
+            empty_text = self.page.get_by_text(self.EMPTY_DATA_TEXT).first
             if await empty_text.is_visible():
                 self.logger.info("列表为空（暂无数据提示可见）")
                 return True
         except Exception:
             pass
-        rows = await self.page.locator("table.c-table-body tbody tr.c-tr").count()
+        rows = await self.page.locator(self.TABLE_ROW_SELECTOR).count()
         self.logger.info(f"列表行数: {rows}")
         return rows == 0
 
@@ -553,14 +567,15 @@ class RFPContractListPage(BasePage):
         return False
 
     async def click_confirm_in_dialog(self) -> None:
-        """在弹窗中点击「确认」按钮"""
+        """在弹窗中点击「确定」按钮"""
         self.logger.info("点击弹窗中的'确定'按钮")
-        dialog = self.page.locator(self.C_DIALOG_SELECTOR).first
-        confirm_btn = dialog.get_by_text(self.CONFIRM_BUTTON_TEXT, exact=True)
+        confirm_btn = self.page.locator(self.CONFIRM_BUTTON_IN_DIALOG_SELECTOR).filter(
+            has_text=self.CONFIRM_BUTTON_TEXT
+        ).first
         await confirm_btn.wait_for(timeout=timeout_config.get_element_timeout())
         await confirm_btn.click()
         await self.page.wait_for_load_state("networkidle")
-        self.logger.info("已点击'确认'按钮")
+        self.logger.info("已点击'确定'按钮")
 
     async def verify_success_toast(self, expected_text: str) -> bool:
         """验证成功 toast 提示出现"""
@@ -577,4 +592,20 @@ class RFPContractListPage(BasePage):
             return False
         except Exception:
             self.logger.warning(f"未检测到成功 toast: {expected_text}")
+            return False
+
+    async def verify_toast_message(self, expected_text: str) -> bool:
+        """验证页面出现指定文本的 toast/提示消息"""
+        self.logger.info(f"验证提示消息: {expected_text}")
+        try:
+            msg = self.page.get_by_text(expected_text)
+            await msg.wait_for(timeout=timeout_config.get_element_timeout())
+            visible = await msg.is_visible()
+            if visible:
+                self.logger.info(f"提示消息已出现: {expected_text}")
+                return True
+            self.logger.warning(f"提示消息不可见: {expected_text}")
+            return False
+        except Exception:
+            self.logger.warning(f"未检测到提示消息: {expected_text}")
             return False

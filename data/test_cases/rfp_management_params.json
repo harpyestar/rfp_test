@@ -396,6 +396,13 @@
       "project_name": "自动化测试项目-固定未启动列"
     }
   ],
+  "contract_list_go_to_sign": [
+    {
+      "case_id": "go_sign_025",
+      "description": "去签约-打开版本选择弹窗",
+      "project_name": "自动化测试项目-价格页签固定酒店项-勿修改任何价格变动"
+    }
+  ],
   "edit_project_tabs": [
     {
       "case_id": "edit_tab_001",

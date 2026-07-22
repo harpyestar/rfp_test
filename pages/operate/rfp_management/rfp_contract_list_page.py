@@ -57,6 +57,11 @@ class RFPContractListPage(BasePage):
     VOID_SUCCESS_TEXT = "操作成功!"
     SUCCESS_TOAST_SELECTOR = ".c-view.c-notify-content-description.bold"
 
+    EXPORT_QUOTE_BUTTON_SELECTOR = "a.c-button-link"
+
+    # ========== 导出报价-版本选择弹窗 ==========
+    SIGN_VERSION_LABELS = ["标准模版", "迁移数据", "运营通模版"]
+
     ORG_NAME_LABEL_TEXT = "机构名"
     PROJECT_NAME_LABEL_TEXT = "签约项目"
     CREATOR_LABEL_TEXT = "创建人"
@@ -608,4 +613,65 @@ class RFPContractListPage(BasePage):
             return False
         except Exception:
             self.logger.warning(f"未检测到提示消息: {expected_text}")
+            return False
+
+    async def verify_export_quote_button_visible(self) -> bool:
+        """验证操作栏中「导出报价」按钮可见"""
+        self.logger.info("验证操作栏显示「导出报价」按钮")
+        try:
+            export_btn = self.page.locator(self.EXPORT_QUOTE_BUTTON_SELECTOR).filter(
+                has_text=self.EXPORT_QUOTE_BUTTON_TEXT
+            ).first
+            await export_btn.wait_for(timeout=timeout_config.get_element_timeout())
+            if await export_btn.is_visible():
+                self.logger.info("「导出报价」按钮可见")
+                return True
+            self.logger.error("「导出报价」按钮不可见")
+            return False
+        except Exception as e:
+            self.logger.error(f"验证「导出报价」按钮失败: {str(e)}")
+            return False
+
+    async def click_export_quote_for_first_row(self) -> None:
+        """点击第一行的「导出报价」按钮"""
+        self.logger.info("点击第一行的「导出报价」按钮")
+        export_btn = self.page.locator(self.EXPORT_QUOTE_BUTTON_SELECTOR).filter(
+            has_text=self.EXPORT_QUOTE_BUTTON_TEXT
+        ).first
+        await export_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await export_btn.click()
+        await self.page.wait_for_timeout(500)
+        self.logger.info("已点击「导出报价」按钮")
+
+    async def verify_sign_version_dialog_visible(self) -> bool:
+        """验证版本选择弹窗可见（标准版/迁移版/经营通版）"""
+        self.logger.info("验证版本选择弹窗")
+        for version_text in self.SIGN_VERSION_LABELS:
+            try:
+                el = self.page.get_by_text(version_text, exact=True).first
+                await el.wait_for(timeout=timeout_config.get_element_timeout())
+                if not await el.is_visible():
+                    self.logger.error(f"版本标签不可见: {version_text}")
+                    return False
+                self.logger.info(f"版本标签可见: {version_text}")
+            except Exception as e:
+                self.logger.error(f"验证版本标签失败 '{version_text}': {str(e)}")
+                return False
+        return True
+
+    async def verify_dialog_cancel_button_visible(self) -> bool:
+        """验证弹窗底部「取消」按钮可见"""
+        self.logger.info("验证弹窗底部「取消」按钮")
+        try:
+            cancel_btn = self.page.get_by_text(
+                self.CANCEL_BUTTON_TEXT, exact=True
+            ).first
+            await cancel_btn.wait_for(timeout=timeout_config.get_element_timeout())
+            if await cancel_btn.is_visible():
+                self.logger.info("弹窗「取消」按钮可见")
+                return True
+            self.logger.error("弹窗「取消」按钮不可见")
+            return False
+        except Exception as e:
+            self.logger.error(f"验证弹窗「取消」按钮失败: {str(e)}")
             return False

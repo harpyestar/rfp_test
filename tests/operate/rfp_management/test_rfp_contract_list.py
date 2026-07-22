@@ -28,6 +28,7 @@ with open(config.PROJECT_ROOT / "data" / "test_cases" / "rfp_management_params.j
     VOID_PROJECT_DATA = _START_STOP_ALL[1]
     VOID_CANCEL_DATA = _ALL_PARAMS["void_cancel_project"][0]
     STOP_WITH_BIDS_DATA = _ALL_PARAMS["stop_project_with_bids"][0]
+    GO_TO_SIGN_DATA = _ALL_PARAMS["contract_list_go_to_sign"][0]
 
 
 def generate_project_name(prefix: str) -> str:
@@ -715,3 +716,52 @@ class TestRFPContractList:
         with allure.step("【步骤 7】验证项目仍在列表中"):
             found = await contract_page.verify_project_in_list(project_name)
             assert found, f"取消作废后项目消失: {project_name}"
+
+    @allure.title("验证去签约-打开版本选择弹窗: {case_data[description]}")
+    @allure.description("""
+    SIGN-LIST-025: 去签约-打开弹窗
+
+    测试: 在已启动Tab下，对有已报价酒店的项目点击「导出报价」，
+    弹出签约版本选择弹窗（标准模版/迁移数据/运营通模版）。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 切换到「已启动」Tab
+    3. 搜索目标项目（已报价酒店数>0的项目）
+    4. 验证操作栏显示「导出报价」按钮
+    5. 点击「导出报价」按钮
+    6. 验证弹窗显示三种签约版本（标准模版/迁移数据/运营通模版）
+    7. 验证弹窗底部有「取消」按钮
+    """)
+    @pytest.mark.parametrize("case_data", [GO_TO_SIGN_DATA])
+    @pytest.mark.asyncio
+    async def test_go_to_sign_open_dialog(self, page_module, operate_user, case_data):
+        """SIGN-LIST-025: 去签约-打开弹窗"""
+        project_name = case_data["project_name"]
+        logger.info(f"Starting SIGN-LIST-025 去签约打开弹窗, 项目={project_name}")
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】切换到「已启动」Tab"):
+            await contract_page.click_started_tab()
+
+        with allure.step(f"【步骤 3】搜索目标项目: {project_name}"):
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【步骤 4】验证操作栏显示「导出报价」按钮"):
+            btn_visible = await contract_page.verify_export_quote_button_visible()
+            assert btn_visible, "操作栏未显示「导出报价」按钮"
+
+        with allure.step("【步骤 5】点击「导出报价」按钮"):
+            await contract_page.click_export_quote_for_first_row()
+
+        with allure.step("【步骤 6】验证弹窗显示三种签约版本"):
+            versions_ok = await contract_page.verify_sign_version_dialog_visible()
+            assert versions_ok, "版本选择弹窗未显示标准模版/迁移数据/运营通模版"
+
+        with allure.step("【步骤 7】验证弹窗底部有「取消」按钮"):
+            cancel_ok = await contract_page.verify_dialog_cancel_button_visible()
+            assert cancel_ok, "弹窗底部未显示「取消」按钮"

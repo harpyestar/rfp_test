@@ -3,6 +3,7 @@
 测试签约列表页的菜单导航、默认Tab展示和Tab切换功能
 """
 import json
+import os
 from datetime import datetime
 
 import allure
@@ -29,6 +30,7 @@ with open(config.PROJECT_ROOT / "data" / "test_cases" / "rfp_management_params.j
     VOID_CANCEL_DATA = _ALL_PARAMS["void_cancel_project"][0]
     STOP_WITH_BIDS_DATA = _ALL_PARAMS["stop_project_with_bids"][0]
     GO_TO_SIGN_DATA = _ALL_PARAMS["contract_list_go_to_sign"][0]
+    EXPORT_STANDARD_DATA = _ALL_PARAMS["contract_list_go_to_sign"][0]  # SIGN-LIST-026 复用同数据
 
 
 def generate_project_name(prefix: str) -> str:
@@ -765,3 +767,72 @@ class TestRFPContractList:
         with allure.step("【步骤 7】验证弹窗底部有「取消」按钮"):
             cancel_ok = await contract_page.verify_dialog_cancel_button_visible()
             assert cancel_ok, "弹窗底部未显示「取消」按钮"
+
+    @allure.title("验证标准模版导出报价: {case_data[description]}")
+    @allure.description("""
+    SIGN-LIST-026: 导出报价-标准模版导出
+
+    测试: 在版本选择弹窗中点击「标准模版」的「导出报价」按钮，
+    验证 loading 状态、文件下载 URL 格式及下载数据大于 10KB。
+
+    测试流程:
+    1. 进入签约项目列表页
+    2. 切换到「已启动」Tab
+    3. 搜索目标项目
+    4. 点击「导出报价」打开版本选择弹窗
+    5. 确认弹窗已打开
+    6. 点击「标准模版」对应的「导出报价」按钮
+    7. 验证按钮显示 loading 状态
+    8. 验证页面显示「数据导出...」loading 提示
+    9. 验证触发文件下载、URL 格式正确、文件大于 10KB
+    """)
+    @pytest.mark.parametrize("case_data", [EXPORT_STANDARD_DATA])
+    @pytest.mark.asyncio
+    async def test_export_standard_template(self, page_module, operate_user, case_data):
+        """SIGN-LIST-026: 导出报价-标准模版导出"""
+        project_name = case_data["project_name"]
+        logger.info(f"Starting SIGN-LIST-026 标准模版导出, 项目={project_name}")
+        contract_page = RFPContractListPage(page_module)
+
+        with allure.step("【步骤 1】进入签约项目列表页"):
+            await contract_page.navigate_to_home()
+            await contract_page.navigate_to_contracting()
+
+        with allure.step("【步骤 2】切换到「已启动」Tab"):
+            await contract_page.click_started_tab()
+
+        with allure.step(f"【步骤 3】搜索目标项目: {project_name}"):
+            await contract_page.search_by_project_name(project_name)
+
+        with allure.step("【步骤 4】点击「导出报价」打开版本选择弹窗"):
+            await contract_page.click_export_quote_for_first_row()
+
+        with allure.step("【步骤 5】确认弹窗已打开"):
+            versions_ok = await contract_page.verify_sign_version_dialog_visible()
+            assert versions_ok, "版本选择弹窗未显示"
+
+        with allure.step("【步骤 6】点击「标准模版」对应的「导出报价」按钮"):
+            async with page_module.expect_download() as download_info:
+                await contract_page.click_standard_template_export_quote()
+
+        with allure.step("【步骤 7】验证按钮显示 loading 状态"):
+            loading_visible = await contract_page.verify_export_loading_visible()
+            assert loading_visible, "未显示「数据导出...」loading 提示"
+
+        with allure.step("【步骤 8】验证文件下载"):
+            download = await download_info.value
+            download_url = download.url
+            logger.info(f"下载 URL: {download_url}")
+
+            url_valid = contract_page.verify_download_url_pattern(download_url)
+            assert url_valid, f"下载 URL 格式不正确: {download_url}"
+
+            download_path = await download.path()
+            file_size = os.path.getsize(download_path)
+            logger.info(f"下载文件大小: {file_size} bytes")
+            assert file_size > 10240, f"下载文件过小: {file_size} bytes（期望 > 10KB）"
+
+            # 验证下载完成后 loading 消失
+            loading_gone = not await contract_page.verify_export_loading_visible()
+            logger.info(f"下载完成后 loading 已消失: {loading_gone}")
+

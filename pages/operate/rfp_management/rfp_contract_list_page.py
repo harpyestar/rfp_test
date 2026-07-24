@@ -61,6 +61,8 @@ class RFPContractListPage(BasePage):
 
     # ========== 导出报价-版本选择弹窗 ==========
     SIGN_VERSION_LABELS = ["标准模版", "迁移数据", "运营通模版"]
+    EXPORT_DOWNLOAD_URL_PATTERN = "/rfp-server/commonProjectManagement/exportTenderPrice/"
+    EXPORT_LOADING_TEXT = "数据导出..."
 
     ORG_NAME_LABEL_TEXT = "机构名"
     PROJECT_NAME_LABEL_TEXT = "签约项目"
@@ -554,8 +556,9 @@ class RFPContractListPage(BasePage):
     async def click_cancel_in_dialog(self) -> None:
         """在弹窗中点击「取消」按钮"""
         self.logger.info("点击弹窗中的'取消'按钮")
-        dialog = self.page.locator(self.C_DIALOG_SELECTOR).first
-        cancel_btn = dialog.get_by_text(self.CANCEL_BUTTON_TEXT, exact=True)
+        cancel_btn = self.page.locator(self.CONFIRM_BUTTON_IN_DIALOG_SELECTOR).filter(
+            has_text=self.CANCEL_BUTTON_TEXT
+        ).first
         await cancel_btn.wait_for(timeout=timeout_config.get_element_timeout())
         await cancel_btn.click()
         self.logger.info("已点击'取消'按钮")
@@ -675,3 +678,43 @@ class RFPContractListPage(BasePage):
         except Exception as e:
             self.logger.error(f"验证弹窗「取消」按钮失败: {str(e)}")
             return False
+
+    async def click_standard_template_export_quote(self) -> None:
+        """在版本选择弹窗中点击「标准模版」对应的「导出报价」按钮"""
+        self.logger.info("点击「标准模版」的「导出报价」按钮")
+        version_label = self.page.get_by_text(
+            self.SIGN_VERSION_LABELS[0], exact=True
+        ).first
+        await version_label.wait_for(timeout=timeout_config.get_element_timeout())
+        parent_row = version_label.locator("..")
+        export_btn = parent_row.get_by_text(
+            self.EXPORT_QUOTE_BUTTON_TEXT, exact=True
+        )
+        await export_btn.wait_for(timeout=timeout_config.get_element_timeout())
+        await export_btn.click()
+        self.logger.info("已点击「标准模版」的「导出报价」按钮")
+
+    async def verify_export_loading_visible(self) -> bool:
+        """验证「数据导出...」loading 提示可见"""
+        self.logger.info("验证「数据导出...」loading 提示")
+        try:
+            loading = self.page.get_by_text(self.EXPORT_LOADING_TEXT)
+            await loading.wait_for(timeout=timeout_config.get_element_timeout())
+            if await loading.is_visible():
+                self.logger.info("「数据导出...」loading 提示可见")
+                return True
+            self.logger.error("「数据导出...」loading 提示不可见")
+            return False
+        except Exception as e:
+            self.logger.error(f"验证 loading 提示失败: {str(e)}")
+            return False
+
+    def verify_download_url_pattern(self, url: str) -> bool:
+        """验证下载 URL 符合 /rfp-server/commonProjectManagement/exportTenderPrice/ 格式"""
+        self.logger.info(f"验证下载 URL: {url}")
+        valid = self.EXPORT_DOWNLOAD_URL_PATTERN in url
+        if valid:
+            self.logger.info(f"URL 格式正确: {url}")
+        else:
+            self.logger.error(f"URL 格式不匹配: {url}, 期望包含: {self.EXPORT_DOWNLOAD_URL_PATTERN}")
+        return valid
